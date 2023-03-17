@@ -3,7 +3,7 @@ This script allows to automate video stylization task using StableDiffusion and 
 
 [![IMAGE_ALT](https://img.youtube.com/vi/YW1JBJ57YBQ/0.jpg)](https://youtu.be/YW1JBJ57YBQ)
 
-Before running the script you need to create reference image that has the same resolution as the target video. You may generate it using Stable Diffusion by stylizing any frame of the video or via any other means. It is better to process different scenes separately to achieve better quality. For the video above the following reference image was used:
+Before running the script you need to create reference image that has the same resolution as the target video. You may generate it using Stable Diffusion by stylizing any frame of the video or via any other means. It is better to process different scenes separately to achieve better quality. It may also be beneficial to use custom models to achieve better stylization consistency. For the video above pixarStyleModel_v10 model was used and the following reference image:
 ![Reference image!](/init.png "Reference image")
 
 ## Dependencies
