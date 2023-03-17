@@ -17,7 +17,7 @@ This script works on top of [Automatic1111/web-ui](https://github.com/AUTOMATIC1
 1. Go to the web-ui settings -> ControlNet tab -> Set "Allow other script to control this extension" checkbox to active and set "Multi ControlNet: Max models amount (requires restart)" to more then 2 -> press "Apply settings"
 2. Run web-ui with '--api' flag. It also better to use '--xformers' flag, as you would need to have the highest resolution possible and using xformers memory optimization will greatly help.   
 ```bash webui.sh --xformers --api```
-3. Go to the script.py file and change main parameters (INPUT_VIDEO, OUTPUT_VIDEO, REF_IMAGE, PROMPT, N_PROMPT, SEED, W, H) to the ones you need for your project. The script is pretty simple so may change other parameters as well, although I would recommend to leave them as is for the first time.
+3. Go to the script.py file and change main parameters (INPUT_VIDEO, OUTPUT_VIDEO, REF_IMAGE, PROMPT, N_PROMPT, SEED, W, H) to the ones you need for your project. The script is pretty simple so you may change other parameters as well, although I would recommend to leave them as is for the first time.
 4. Run the script with ```python3 script.py```
 
 ## Potential improvements
