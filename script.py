@@ -15,7 +15,7 @@ SEED = 2901260158
 w,h = 1216, 512 # Width and height of the processed image. Note that actual image processed would be a W x 2H resolution. You should have enough VRAM to process it.
 
 
-START_FROM_IND = 2235 # index of a frame to start a processing from. Might be helpful with long animations where you need to restart the script multiple times
+START_FROM_IND = 0 # index of a frame to start a processing from. Might be helpful with long animations where you need to restart the script multiple times
 SAVE_FRAMES = True # saves individual frames into 'out' folder if set True. Again might be helpful with long animations
 
 def to_b64(img):
