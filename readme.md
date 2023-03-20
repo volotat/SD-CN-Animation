@@ -9,7 +9,7 @@ Before running the script you need to create reference image that has the same r
 ## Dependencies
 To install all necessary dependencies run this command
 ```
-pip install opencv-python, numpy, tqdm
+pip install opencv-python numpy tqdm
 ```
 
 ## Running the script
