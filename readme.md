@@ -1,5 +1,5 @@
 # SD+CN Animation Script
-This script allows to automate video stylization task using StableDiffusion and ControlNet. It uses simple optical flow estimation algorithm to keep the animation stable and create inpating mask that used to generate the next frame. Here is an example of a video made with this script:
+This script allows you to automate video stylization task using StableDiffusion and ControlNet. It uses a simple optical flow estimation algorithm to keep the animation stable and create an inpating mask that is used to generate the next frame. Here is an example of a video made with this script:
 
 [![IMAGE_ALT](https://img.youtube.com/vi/j-0niEMm6DU/0.jpg)](https://youtu.be/j-0niEMm6DU)
 
