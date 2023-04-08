@@ -3,6 +3,8 @@ This script allows you to automate video stylization task using StableDiffusion 
 
 [![IMAGE_ALT](https://img.youtube.com/vi/j-0niEMm6DU/0.jpg)](https://youtu.be/j-0niEMm6DU)
 
+This script can also be using to swap the person in the video like in this example: https://youtube.com/shorts/be93_dIeZWU
+
 ## Dependencies
 To install all necessary dependencies run this command
 ```
