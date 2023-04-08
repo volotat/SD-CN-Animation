@@ -21,6 +21,11 @@ This script works on top of [Automatic1111/web-ui](https://github.com/AUTOMATIC1
 3. Go to the script.py file and change main parameters (INPUT_VIDEO, OUTPUT_VIDEO, PROMPT, N_PROMPT, W, H) to the ones you need for your project. The script is pretty simple so you may change other parameters as well, although I would recommend to leave them as is for the first time.
 4. Run the script with ```python3 script.py```
 
+<!---
+## Last version changes 0.4
+* Fixed issue with extreme blur accumulating at the static parts of the video
+-->
+
 ## Last version changes 0.3
 * Flow estimation algorithm is updated to [RAFT](https://github.com/princeton-vl/RAFT) method.
 * Difference map now computed as per-pixel maximum of warped first and second frame of the original video and occlusion map that is computed from forward and backward flow estimation.
