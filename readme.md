@@ -11,6 +11,8 @@ To install all necessary dependencies run this command
 pip install opencv-python opencv-contrib-python numpy tqdm
 ```
 
+To run the algorithm alongside Stable Diffusion with ControlNet in 640x640 resolution would require about 8GB of VRAM, as [RAFT](https://github.com/princeton-vl/RAFT) (current optical flow estimation method) takes about 3,7GB of memory.
+
 ## Running the script
 This script works on top of [Automatic1111/web-ui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) interface via API. To run this script you have to set it up first. You also should have [sd-webui-controlnet](https://github.com/Mikubill/sd-webui-controlnet) extension installed. You need to have control_hed-fp16 model installed. If you have web-ui with ControlNet working correctly do the following:
 1. Go to the web-ui settings -> ControlNet tab -> Set "Allow other script to control this extension" checkbox to active and set "Multi ControlNet: Max models amount (requires restart)" to more then 2 -> press "Apply settings"
@@ -19,8 +21,14 @@ This script works on top of [Automatic1111/web-ui](https://github.com/AUTOMATIC1
 3. Go to the script.py file and change main parameters (INPUT_VIDEO, OUTPUT_VIDEO, PROMPT, N_PROMPT, W, H) to the ones you need for your project. The script is pretty simple so you may change other parameters as well, although I would recommend to leave them as is for the first time.
 4. Run the script with ```python3 script.py```
 
+## Last version changes 0.3
+* Flow estimation algorithm is updated to [RAFT](https://github.com/princeton-vl/RAFT) method.
+* Difference map now computed as per-pixel maximum of warped first and second frame of the original video and occlusion map that is computed from forward and backward flow estimation.
+* Added keyframe detection that illuminates ghosting artifacts between the scenes.
+
 ## Potential improvements
 There are several ways overall quality of animation may be improved:
 * You may use a separate processing for each camera position to get a more consistent style of the characters and less ghosting.
 * Because the quality of the video depends on how good optical flow was estimated it might be beneficial to use high frame rate video as a source, so it would be easier to guess the flow properly.
-* The quality of flow estimation might be greatly improved with proper flow estimation model like this one: https://github.com/autonomousvision/unimatch
+* The quality of flow estimation might be greatly improved with proper flow estimation model like this one: https://github.com/autonomousvision/unimatch .
+* It is possible to lower VRAM requirements if precompute flows maps beforehand. 
