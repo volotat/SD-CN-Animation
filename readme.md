@@ -11,6 +11,9 @@ To install all necessary dependencies run this command
 pip install opencv-python opencv-contrib-python numpy tqdm
 ```
 
+You have to set up the RAFT repository as it described here: https://github.com/princeton-vl/RAFT .
+Basically it just comes down to running "./download_models.sh" in RAFT folder to download the models. 
+
 To run the algorithm alongside Stable Diffusion with ControlNet in 640x640 resolution would require about 8GB of VRAM, as [RAFT](https://github.com/princeton-vl/RAFT) (current optical flow estimation method) takes about 3,7GB of memory.
 
 ## Running the script
