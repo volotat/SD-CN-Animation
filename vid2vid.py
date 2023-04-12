@@ -16,7 +16,7 @@ PROMPT = "marble statue"
 N_PROMPT = "(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
 w,h = 1152, 640 # Width and height of the processed image. Note that actual image processed would be a W x H resolution.
 
-START_FROM_IND = 575 # index of a frame to start a processing from. Might be helpful with long animations where you need to restart the script multiple times
+START_FROM_IND = 0 # index of a frame to start a processing from. Might be helpful with long animations where you need to restart the script multiple times
 SAVE_FRAMES = True # saves individual frames into 'out' folder if set True. Again might be helpful with long animations
 
 PROCESSING_STRENGTH = 0.85
