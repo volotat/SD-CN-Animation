@@ -136,7 +136,7 @@ fps = int(input_video.get(cv2.CAP_PROP_FPS))
 total_frames = int(input_video.get(cv2.CAP_PROP_FRAME_COUNT))
 
 # Create an output video file with the same fps, width, and height as the input video
-output_video = cv2.VideoWriter(OUTPUT_VIDEO, cv2.VideoWriter_fourcc(*'MP4V'), fps, (w, h))
+output_video = cv2.VideoWriter(OUTPUT_VIDEO, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
 
 prev_frame = None
 prev_frame_styled = None
