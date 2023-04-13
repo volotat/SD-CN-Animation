@@ -32,7 +32,7 @@ if user_choice == 'y':
     # Call compute_flow.py with the appropriate arguments
     subprocess.run(
         [
-            "python3",
+            "python",
             "compute_flow.py",
             "-i", INPUT_VIDEO,
             "-o", flow_maps_output,
