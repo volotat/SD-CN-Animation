@@ -68,23 +68,49 @@ else:
 
 # Ask the user to specify the start frame index
 # index of a frame to start a processing from. Might be helpful with long animations where you need to restart the script multiple times
-start_from_ind = input("Enter the index of the frame to start processing from (default: 0): ").strip()
+start_from_ind = input("Enter the index of the frame to start processing from or press enter for default (default: 0): ").strip()
 if not start_from_ind.isdigit():
     START_FROM_IND = 0
 else:
     START_FROM_IND = int(start_from_ind)
 SAVE_FRAMES = input("Do you want to save individual frames into 'out' folder? might be helpful with long animations (Y/N): ").strip().lower() == 'y'    
 
-PROCESSING_STRENGTH = float(input("Enter the processing strength (default is 0.85): ") or 0.85)
-BLUR_FIX_STRENGTH = float(input("Enter the blur fix strength (default is 0.15): ") or 0.15)
+PROCESSING_STRENGTH = float(input("Enter the processing strength or press enter for default  (default is 0.85): ") or 0.85)
+BLUR_FIX_STRENGTH = float(input("Enter the blur fix strength or press enter for default  (default is 0.15): ") or 0.15)
 
 APPLY_HED = input("Do you want to apply HED? (Y/N): ").strip().lower() == 'y'
 APPLY_CANNY = input("Do you want to apply Canny? (Y/N): ").strip().lower() == 'y'
 APPLY_DEPTH = input("Do you want to apply Depth? (Y/N): ").strip().lower() == 'y'
 GUESSMODE = input("Do you want to use guessmode? (Y/N): ").strip().lower() == 'y'
 
-CFG_SCALE = float(input("Enter the blur fix strength (default is 5.5): ") or 5.5)
+CFG_SCALE = float(input("Enter the cfg scale or press enter for default (default is 5.5): ") or 5.5)
 
+# Define the list of options
+options = {
+    "1": "Euler",
+    "2": "Euler a",
+    "3": "DPM++ 2S a",
+    "4": "UniPC",
+    "5": "Custom",
+}
+
+# Ask the user to select an option
+print("Please select an option from the following list:")
+for key, value in options.items():
+    print(f"{key}. {value}")
+
+user_choice = input("Enter the number corresponding to your choice: ").strip()
+
+# Validate the user input and set the SAMPLER variable
+if user_choice in options:
+    if user_choice == "5":
+        custom_sampler = input("Please enter your custom sampler: ")
+        SAMPLER = custom_sampler.strip()
+    else:
+        SAMPLER = options[user_choice]
+else:
+    print("Invalid choice. Please enter a number from 1 to 5.")
+    
 VISUALIZE = True
 
 def to_b64(img):
@@ -116,7 +142,7 @@ class controlnetRequest():
       "height": h,
       "restore_faces": False,
       "eta": 0,
-      "sampler_index": "DPM++ 2S a",
+      "sampler_index": SAMPLER,
       "control_net_enabled": True,
       "alwayson_scripts": {
         "ControlNet":{"args": []}
