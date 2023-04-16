@@ -108,7 +108,6 @@ def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_sty
 
   return alpha_mask, warped_frame_styled
 
-
 def frames_norm(occl): return occl / 127.5 - 1
 
 def flow_norm(flow): return flow / 255
