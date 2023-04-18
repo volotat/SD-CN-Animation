@@ -57,12 +57,21 @@ def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_sty
   next_flow = cv2.resize(next_flow, (w, h))
   prev_flow = cv2.resize(prev_flow, (w, h))
 
-  flow_map = -next_flow.copy()
+  # This is not correct. The flow map should be applied to the next frame to get previous frame
+  # flow_map = -next_flow.copy()
+
+  # remove white noise (@alexfredo suggestion)
+  next_flow[np.abs(next_flow) < 3] = 0
+  prev_flow[np.abs(prev_flow) < 3] = 0
+
+  # Here is the correct version
+  flow_map = prev_flow.copy()
+
   flow_map[:,:,0] += np.arange(w)
   flow_map[:,:,1] += np.arange(h)[:,np.newaxis]
 
-  warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_NEAREST)
-  warped_frame_styled = cv2.remap(prev_frame_styled, flow_map, None, cv2.INTER_NEAREST)
+  warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)
+  warped_frame_styled = cv2.remap(prev_frame_styled, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)
 
   # compute occlusion mask
   fb_flow = next_flow + prev_flow
@@ -80,8 +89,19 @@ def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_sty
   alpha_mask = alpha_mask.repeat(3, axis = -1)
 
   #alpha_mask_blured = cv2.dilate(alpha_mask, np.ones((5, 5), np.float32))
-  alpha_mask = cv2.GaussianBlur(alpha_mask, (51,51), 5, cv2.BORDER_DEFAULT)
+  alpha_mask = cv2.GaussianBlur(alpha_mask, (51,51), 5, cv2.BORDER_REFLECT)
 
   alpha_mask = np.clip(alpha_mask, 0, 1)
 
   return alpha_mask, warped_frame_styled
+
+
+def frames_norm(occl): return occl / 127.5 - 1
+
+def flow_norm(flow): return flow / 255
+
+def occl_norm(occl): return occl / 127.5 - 1
+
+def flow_renorm(flow): return flow * 255
+
+def occl_renorm(occl): return (occl + 1) * 127.5
