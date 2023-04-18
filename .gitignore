@@ -1,3 +1,6 @@
 __pycache__/
 out/
+videos/
+FP_Res/
 result.mp4
+*.pth
