@@ -93,20 +93,11 @@ Go to the **txt2vid.py** file and change main parameters (OUTPUT_VIDEO, PROMPT, 
 python3 txt2vid.py
 ```
 
-
-<!--
-## Last version changes: v0.4
-* Fixed issue with extreme blur accumulating at the static parts of the video.
-* The order of processing was changed to achieve the best quality at different domains.
-* Optical flow computation isolated into a separate script for better GPU memory management. Check out the instructions for a new processing pipeline.
--->
-
-
 ## Last version changes: v0.5
 * Fixed an issue with the wrong direction of an optical flow applied to an image.
 * Added text to video mode within txt2vid.py script. Make sure to update new dependencies for this script to work!
 * Added a threshold for an optical flow before processing the frame to remove white noise that might appear, as it was suggested by [@alexfredo](https://github.com/alexfredo).
-
+* Background removal at flow computation stage implemented by [@CaptnSeraph](https://github.com/CaptnSeraph), it should reduce ghosting effect in most of the videos processed with vid2vid script.
 
 <!--
 ## Potential improvements

@@ -15,51 +15,51 @@ RAFT_model = None
 fgbg = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=16, detectShadows=True)
 
 def background_subtractor(frame, fgbg):
-    fgmask = fgbg.apply(frame)
-    return cv2.bitwise_and(frame, frame, mask=fgmask)
+  fgmask = fgbg.apply(frame)
+  return cv2.bitwise_and(frame, frame, mask=fgmask)
 
 def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
-    global RAFT_model
-    if RAFT_model is None:
-        args = argparse.Namespace(**{
-            'model': 'RAFT/models/raft-things.pth',
-            'mixed_precision': True,
-            'small': False,
-            'alternate_corr': False,
-            'path': ""
-        })
+  global RAFT_model
+  if RAFT_model is None:
+    args = argparse.Namespace(**{
+        'model': 'RAFT/models/raft-things.pth',
+        'mixed_precision': True,
+        'small': False,
+        'alternate_corr': False,
+        'path': ""
+    })
 
-        RAFT_model = torch.nn.DataParallel(RAFT(args))
-        RAFT_model.load_state_dict(torch.load(args.model))
+    RAFT_model = torch.nn.DataParallel(RAFT(args))
+    RAFT_model.load_state_dict(torch.load(args.model))
 
-        RAFT_model = RAFT_model.module
-        RAFT_model.to(device)
-        RAFT_model.eval()
+    RAFT_model = RAFT_model.module
+    RAFT_model.to(device)
+    RAFT_model.eval()
 
-    if subtract_background:
-        frame1 = background_subtractor(frame1, fgbg)
-        frame2 = background_subtractor(frame2, fgbg)
+  if subtract_background:
+    frame1 = background_subtractor(frame1, fgbg)
+    frame2 = background_subtractor(frame2, fgbg)
 
-    with torch.no_grad():
-        frame1_torch = torch.from_numpy(frame1).permute(2, 0, 1).float()[None].to(device)
-        frame2_torch = torch.from_numpy(frame2).permute(2, 0, 1).float()[None].to(device)
+  with torch.no_grad():
+    frame1_torch = torch.from_numpy(frame1).permute(2, 0, 1).float()[None].to(device)
+    frame2_torch = torch.from_numpy(frame2).permute(2, 0, 1).float()[None].to(device)
 
-        padder = InputPadder(frame1_torch.shape)
-        image1, image2 = padder.pad(frame1_torch, frame2_torch)
+    padder = InputPadder(frame1_torch.shape)
+    image1, image2 = padder.pad(frame1_torch, frame2_torch)
 
-        # estimate optical flow
-        _, next_flow = RAFT_model(image1, image2, iters=20, test_mode=True)
-        _, prev_flow = RAFT_model(image2, image1, iters=20, test_mode=True)
+    # estimate optical flow
+    _, next_flow = RAFT_model(image1, image2, iters=20, test_mode=True)
+    _, prev_flow = RAFT_model(image2, image1, iters=20, test_mode=True)
 
-        next_flow = next_flow[0].permute(1, 2, 0).cpu().numpy()
-        prev_flow = prev_flow[0].permute(1, 2, 0).cpu().numpy()
+    next_flow = next_flow[0].permute(1, 2, 0).cpu().numpy()
+    prev_flow = prev_flow[0].permute(1, 2, 0).cpu().numpy()
 
-        fb_flow = next_flow + prev_flow
-        fb_norm = np.linalg.norm(fb_flow, axis=2)
+    fb_flow = next_flow + prev_flow
+    fb_norm = np.linalg.norm(fb_flow, axis=2)
 
-        occlusion_mask = fb_norm[..., None].repeat(3, axis=-1)
+    occlusion_mask = fb_norm[..., None].repeat(3, axis=-1)
 
-    return next_flow, prev_flow, occlusion_mask, frame1, frame2
+  return next_flow, prev_flow, occlusion_mask, frame1, frame2
 
 # ... rest of the file ...
 
