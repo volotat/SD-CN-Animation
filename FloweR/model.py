@@ -2,13 +2,6 @@ import torch
 import torch.nn as nn
 import torch.functional as F
 
-class View(nn.Module):
-  def __init__(self, *shape):
-      super(View, self).__init__()
-      self.shape = shape
-  def forward(self, input):
-      return input.view(*self.shape)
-
 # Define the model
 class FloweR(nn.Module):
   def __init__(self, input_size = (384, 384), window_size = 4):
