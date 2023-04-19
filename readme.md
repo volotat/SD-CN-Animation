@@ -34,6 +34,7 @@ This script can also be using to swap the person in the video like in this examp
 </tr>
 </table>
 
+All examples you can see here are originally generated at 512x512 resolution using the 'sd-v1-5-inpainting' model as a base. They were downsized and compressed for better loading speed. You can see them in their original quality in the 'examples' folder. Actual prompts used were stated in the following format: "RAW photo, {subject}, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3", only the 'subject' part is described in the table below.
 
 
 
@@ -73,19 +74,16 @@ python3 vid2vid.py
 
 
 ### Text To Video
-This method is still in development and works on top of ‘Stable Diffusion’ and 'FloweR' - optical flow reconstruction method that is also in a yearly development stage. Do not expect much from it as it is more of a proof of a concept rather than a complete solution. All examples you can see here are originally generated at 512x512 resolution using the 'sd-v1-5-inpainting' model as a base. They were downsized and compressed for better loading speed. You can see them in their original quality in the 'examples' folder. Actual prompts used were stated in the following format: "RAW photo, {subject}, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3", only the 'subject' part is described in the table below.
-
+This method is still in development and works on top of ‘Stable Diffusion’ and 'FloweR' - optical flow reconstruction method that is also in a yearly development stage. Do not expect much from it as it is more of a proof of a concept rather than a complete solution. 
 
 #### Step 1.
 Download 'FloweR_0.1.pth' model from here: [Google drive link](https://drive.google.com/file/d/1WhzoVIw6Kdg4EjfK9LaTLqFm5dF-IJ7F/view?usp=share_link) and place it in the 'FloweR' folder.
-
 
 #### Step 2.
 Same as with vid2vid case, run web-ui with '--api' flag. It is also better to use '--xformers' flag, as you would need to have the highest resolution possible and using xformers memory optimization will greatly help.  
 ```
 bash webui.sh --xformers --api
 ```
-
 
 #### Step 3.
 Go to the **txt2vid.py** file and change main parameters (OUTPUT_VIDEO, PROMPT, N_PROMPT, W, H) to the ones you need for your project. Again, the script is simple so you may change other parameters if you want to. Finally run the script with the command:
