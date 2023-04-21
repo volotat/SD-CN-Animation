@@ -8,13 +8,16 @@ import os
 import h5py
 from flow_utils import compute_diff_map
 
+import skimage
+import datetime
+
 INPUT_VIDEO = "input.mp4"
 FLOW_MAPS = "flow.h5"
-OUTPUT_VIDEO = "result.mp4"
+OUTPUT_VIDEO = f'result_{datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")}.mp4'
 
-PROMPT = "marble statue"
-N_PROMPT = "(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
-w,h = 1152, 640 # Width and height of the processed image. Note that actual image processed would be a W x H resolution.
+PROMPT = "RAW photo, Jessica Chastain, (high detailed skin:1.2), 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3"
+N_PROMPT = "person, skin, (deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
+w,h = 1024, 576 # Width and height of the processed image. Note that actual image processed would be a W x H resolution.
 
 START_FROM_IND = 0 # index of a frame to start a processing from. Might be helpful with long animations where you need to restart the script multiple times
 SAVE_FRAMES = True # saves individual frames into 'out' folder if set True. Again might be helpful with long animations
@@ -140,6 +143,7 @@ output_video = cv2.VideoWriter(OUTPUT_VIDEO, cv2.VideoWriter_fourcc(*'mp4v'), fp
 
 prev_frame = None
 prev_frame_styled = None
+#init_image = None
 
 # reading flow maps in a stream manner
 with h5py.File(FLOW_MAPS, 'r') as f:
@@ -172,6 +176,8 @@ with h5py.File(FLOW_MAPS, 'r') as f:
 
       alpha_img = out_image.copy()
       out_image_ = out_image.copy()
+      warped_styled = out_image.copy()
+      #init_image = out_image.copy()
     else:
       # Resize the frame to proper resolution 
       frame = cv2.resize(cur_frame, (w, h))
@@ -188,13 +194,18 @@ with h5py.File(FLOW_MAPS, 'r') as f:
       alpha_mask = np.clip(alpha_mask + 0.05, 0.05, 0.95)
       alpha_img = np.clip(alpha_mask * 255, 0, 255).astype(np.uint8)
 
+      # normalizing the colors
+      out_image = skimage.exposure.match_histograms(out_image, frame, multichannel=False, channel_axis=-1)
+
       out_image = out_image.astype(float) * alpha_mask + warped_styled.astype(float) * (1 - alpha_mask)
 
-      out_image_ = (out_image * 0.65 + warped_styled * 0.35) 
+      #out_image = skimage.exposure.match_histograms(out_image, prev_frame, multichannel=True, channel_axis=-1)
+      #out_image_ = (out_image * 0.65 + warped_styled * 0.35) 
       
       
     # Bluring issue fix via additional processing
-    out_image_fixed = controlnetRequest(to_b64(out_image_), to_b64(frame), BLUR_FIX_STRENGTH, w, h, mask = None, seed=8888).sendRequest()
+    out_image_fixed = controlnetRequest(to_b64(out_image), to_b64(frame), BLUR_FIX_STRENGTH, w, h, mask = None, seed=8888).sendRequest()
+    
 
     # Write the frame to the output video
     frame_out = np.clip(out_image_fixed, 0, 255).astype(np.uint8)
@@ -202,8 +213,11 @@ with h5py.File(FLOW_MAPS, 'r') as f:
 
     if VISUALIZE:
       # show the last written frame - useful to catch any issue with the process
-      img_show = cv2.hconcat([frame_out, alpha_img])
-      cv2.imshow('Out img', img_show)
+      warped_styled = np.clip(warped_styled, 0, 255).astype(np.uint8)
+
+      img_show_top = cv2.hconcat([frame, warped_styled])
+      img_show_bot = cv2.hconcat([frame_out, alpha_img])
+      cv2.imshow('Out img', cv2.vconcat([img_show_top, img_show_bot]))
       cv2.setWindowTitle("Out img", str(ind+1))
       if cv2.waitKey(1) & 0xFF == ord('q'): exit() # press Q to close the script while processing
 

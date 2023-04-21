@@ -101,6 +101,8 @@ python3 txt2vid.py
 ## Last version changes: v0.6
 * Added separate flag '-rb' for background removal process at the flow computation stage in the compute_flow.py script.
 * Added flow normalization before rescaling it, so the magnitude of the flow computed correctly at the different resolution.
+* Less ghosting and color change in vid2vid mode
+-->
 
 <!--
 ## Potential improvements

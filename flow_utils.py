@@ -78,8 +78,8 @@ def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_sty
   prev_flow = prev_flow / np.array([fl_h,fl_w])
 
   # remove low value noise (@alexfredo suggestion)
-  next_flow[np.abs(next_flow) < 0.01] = 0
-  prev_flow[np.abs(prev_flow) < 0.01] = 0
+  next_flow[np.abs(next_flow) < 0.05] = 0
+  prev_flow[np.abs(prev_flow) < 0.05] = 0
 
   # resize flow
   next_flow = cv2.resize(next_flow, (w, h)) 
@@ -87,17 +87,24 @@ def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_sty
   prev_flow = cv2.resize(prev_flow, (w, h))
   prev_flow = (prev_flow  * np.array([h,w])).astype(np.float32)
 
-  # This is not correct. The flow map should be applied to the next frame to get previous frame
-  # flow_map = -next_flow.copy()
+  # Generate sampling grids
+  grid_y, grid_x = torch.meshgrid(torch.arange(0, h), torch.arange(0, w))
+  flow_grid = torch.stack((grid_x, grid_y), dim=0).float()
+  flow_grid += torch.from_numpy(prev_flow).permute(2, 0, 1)
+  flow_grid = flow_grid.unsqueeze(0)
+  flow_grid[:, 0, :, :] = 2 * flow_grid[:, 0, :, :] / (w - 1) - 1
+  flow_grid[:, 1, :, :] = 2 * flow_grid[:, 1, :, :] / (h - 1) - 1
+  flow_grid = flow_grid.permute(0, 2, 3, 1)
 
-  # Here is the correct version
-  flow_map = prev_flow.copy()
+  
+  prev_frame_torch = torch.from_numpy(prev_frame).float().unsqueeze(0).permute(0, 3, 1, 2) #N, C, H, W
+  prev_frame_styled_torch = torch.from_numpy(prev_frame_styled).float().unsqueeze(0).permute(0, 3, 1, 2) #N, C, H, W
 
-  flow_map[:,:,0] += np.arange(w)
-  flow_map[:,:,1] += np.arange(h)[:,np.newaxis]
+  warped_frame = torch.nn.functional.grid_sample(prev_frame_torch, flow_grid, padding_mode="reflection").permute(0, 2, 3, 1)[0].numpy()
+  warped_frame_styled = torch.nn.functional.grid_sample(prev_frame_styled_torch, flow_grid, padding_mode="reflection").permute(0, 2, 3, 1)[0].numpy()
 
-  warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)
-  warped_frame_styled = cv2.remap(prev_frame_styled, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)
+  #warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)
+  #warped_frame_styled = cv2.remap(prev_frame_styled, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)
 
   # compute occlusion mask
   fb_flow = next_flow + prev_flow
