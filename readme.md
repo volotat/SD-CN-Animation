@@ -3,11 +3,25 @@ This project allows you to automate video stylization task using StableDiffusion
 
 
 ### Video to Video Examples:
+<!--
 [![IMAGE_ALT](https://img.youtube.com/vi/j-0niEMm6DU/0.jpg)](https://youtu.be/j-0niEMm6DU)
-
-
 This script can also be using to swap the person in the video like in this example: https://youtube.com/shorts/be93_dIeZWU
+-->
+</table>
+<table class="center">
+<tr>
+ <td><img src="examples/girl_org.gif" raw=true></td>
+ <td><img src="examples/girl_to_jc.gif" raw=true></td>
+ <td><img src="examples/girl_to_wc.gif" raw=true></td>
+</tr>
+<tr>
+ <td width=33% align="center">Original video</td>
+ <td width=33% align="center">"Jessica Chastain"</td>
+ <td width=33% align="center">"Watercolor painting"</td>
+</tr>
+</table>
 
+Examples presented are generated at 1024x576 resolution using the 'realisticVisionV13_v13' model as a base. They were cropt, downsized and compressed for better loading speed. You can see them in their original quality in the 'examples' folder. 
 
 ### Text to Video Examples:
 </table>
