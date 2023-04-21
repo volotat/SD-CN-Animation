@@ -98,6 +98,11 @@ python3 txt2vid.py
 * Background removal at flow computation stage implemented by [@CaptnSeraph](https://github.com/CaptnSeraph), it should reduce ghosting effect in most of the videos processed with vid2vid script.
 
 <!--
+## Last version changes: v0.6
+* Added separate flag '-rb' for background removal process at the flow computation stage in the compute_flow.py script.
+* Added flow normalization before rescaling it, so the magnitude of the flow computed correctly at the different resolution.
+
+<!--
 ## Potential improvements
 There are several ways overall quality of animation may be improved:
 * You may use a separate processing for each camera position to get a more consistent style of the characters and less ghosting.

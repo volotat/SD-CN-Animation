@@ -22,8 +22,8 @@ SAVE_FRAMES = True # saves individual frames into 'out' folder if set True. Agai
 PROCESSING_STRENGTH = 0.85
 BLUR_FIX_STRENGTH = 0.15
 
-APPLY_HED = False
-APPLY_CANNY = True
+APPLY_HED = True
+APPLY_CANNY = False
 APPLY_DEPTH = False
 GUESSMODE = False
 

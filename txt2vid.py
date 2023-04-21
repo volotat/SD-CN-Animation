@@ -15,9 +15,10 @@ from utils import flow_viz
 
 from flow_utils import *
 import skimage
+import datetime
 
 
-OUTPUT_VIDEO = "result.mp4"
+OUTPUT_VIDEO = f'result_{datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")}.mp4'
 
 PROMPT = "RAW photo, bonfire near the camp in the mountains at night, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3"
 N_PROMPT = "(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, letters, logo, brand, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
@@ -119,7 +120,7 @@ if VISUALIZE: cv2.namedWindow('Out img')
 
 
 # Create an output video file with the same fps, width, and height as the input video
-output_video = cv2.VideoWriter(OUTPUT_VIDEO, cv2.VideoWriter_fourcc(*'mp4v'), 8, (w, h))
+output_video = cv2.VideoWriter(OUTPUT_VIDEO, cv2.VideoWriter_fourcc(*'mp4v'), 15, (w, h))
 
 prev_frame = None
 prev_frame_styled = None
@@ -153,8 +154,8 @@ for ind in tqdm(range(40)):
   pred_flow = flow_renorm(pred_data[...,:2]).cpu().numpy()
   pred_occl = occl_renorm(pred_data[...,2:3]).cpu().numpy().repeat(3, axis = -1)
 
-  pred_flow = np.clip(pred_flow, -150, 150)
-  pred_flow = cv2.GaussianBlur(pred_flow, (31,31), 2, cv2.BORDER_REFLECT_101)
+  pred_flow = pred_flow / (1 + np.linalg.norm(pred_flow, axis=-1, keepdims=True) * 0.05) 
+  pred_flow = cv2.GaussianBlur(pred_flow, (31,31), 1, cv2.BORDER_REFLECT_101)
  
 
   pred_occl = cv2.GaussianBlur(pred_occl, (21,21), 2, cv2.BORDER_REFLECT_101)
@@ -184,7 +185,7 @@ for ind in tqdm(range(40)):
       ds=FIX_STRENGTH, w=w, h=h).sendRequest()
   
   # These step is necessary to reduce color drift of the image that some models may cause
-  out_image = skimage.exposure.match_histograms(out_image, warped_frame, multichannel=True, channel_axis=-1)
+  out_image = skimage.exposure.match_histograms(out_image, init_frame, multichannel=True, channel_axis=-1)
   
   output_video.write(out_image)
   if SAVE_FRAMES: 

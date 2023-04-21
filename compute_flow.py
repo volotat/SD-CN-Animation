@@ -36,7 +36,7 @@ def main(args):
       cur_frame = cv2.resize(cur_frame, (W, H))
 
       if prev_frame is not None:
-        next_flow, prev_flow, occlusion_mask, frame1_bg_removed, frame2_bg_removed = RAFT_estimate_flow(prev_frame, cur_frame)
+        next_flow, prev_flow, occlusion_mask, frame1_bg_removed, frame2_bg_removed = RAFT_estimate_flow(prev_frame, cur_frame, subtract_background=args.remove_background)
 
         # write data into a file
         flow_maps.resize(ind, axis=0)
@@ -47,7 +47,10 @@ def main(args):
 
         if args.visualize:
           # show the last written frame - useful to catch any issue with the process
-          img_show = cv2.hconcat([cur_frame, frame2_bg_removed, occlusion_mask])
+          if args.remove_background:
+            img_show = cv2.hconcat([cur_frame, frame2_bg_removed, occlusion_mask])
+          else:
+            img_show = cv2.hconcat([cur_frame, occlusion_mask])
           cv2.imshow('Out img', img_show)
           if cv2.waitKey(1) & 0xFF == ord('q'): exit() # press Q to close the script while processing
 
@@ -66,6 +69,7 @@ if __name__ == '__main__':
   parser.add_argument('-W', '--width', help='Width of the generated flow maps', default=1024, type=int)
   parser.add_argument('-H', '--height', help='Height of the generated flow maps', default=576, type=int)
   parser.add_argument('-v', '--visualize', action='store_true', help='Show proceed images and occlusion maps')
+  parser.add_argument('-rb', '--remove_background', action='store_true', help='Remove background of the image')
   args = parser.parse_args()
 
   main(args)

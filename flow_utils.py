@@ -67,15 +67,28 @@ def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
 def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_styled):
   h, w = cur_frame.shape[:2]
 
-  next_flow = cv2.resize(next_flow, (w, h))
+  #print(np.amin(next_flow), np.amax(next_flow))
+  #exit()
+  
+
+  fl_w, fl_h = next_flow.shape[:2]
+
+  # normalize flow
+  next_flow = next_flow / np.array([fl_h,fl_w]) 
+  prev_flow = prev_flow / np.array([fl_h,fl_w])
+
+  # remove low value noise (@alexfredo suggestion)
+  next_flow[np.abs(next_flow) < 0.01] = 0
+  prev_flow[np.abs(prev_flow) < 0.01] = 0
+
+  # resize flow
+  next_flow = cv2.resize(next_flow, (w, h)) 
+  next_flow = (next_flow * np.array([h,w])).astype(np.float32)
   prev_flow = cv2.resize(prev_flow, (w, h))
+  prev_flow = (prev_flow  * np.array([h,w])).astype(np.float32)
 
   # This is not correct. The flow map should be applied to the next frame to get previous frame
   # flow_map = -next_flow.copy()
-
-  # remove white noise (@alexfredo suggestion)
-  next_flow[np.abs(next_flow) < 3] = 0
-  prev_flow[np.abs(prev_flow) < 3] = 0
 
   # Here is the correct version
   flow_map = prev_flow.copy()
