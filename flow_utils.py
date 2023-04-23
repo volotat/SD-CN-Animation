@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-# RAFT dependencies
+#RAFT dependencies
 import sys
 sys.path.append('RAFT/core')
 
@@ -12,21 +12,15 @@ from raft import RAFT
 from utils.utils import InputPadder
 
 RAFT_model = None
-fgbg = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=16, detectShadows=True)
-
-def background_subtractor(frame, fgbg):
-  fgmask = fgbg.apply(frame)
-  return cv2.bitwise_and(frame, frame, mask=fgmask)
-
-def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
+def RAFT_estimate_flow(frame1, frame2, frame1_bg_removed, frame2_bg_removed, device='cuda', subtract_background=True):
   global RAFT_model
   if RAFT_model is None:
     args = argparse.Namespace(**{
-        'model': 'RAFT/models/raft-things.pth',
-        'mixed_precision': True,
-        'small': False,
-        'alternate_corr': False,
-        'path': ""
+      'model': 'RAFT/models/raft-things.pth',
+      'mixed_precision': True,
+      'small': False,
+      'alternate_corr': False,
+      'path': ""
     })
 
     RAFT_model = torch.nn.DataParallel(RAFT(args))
@@ -36,13 +30,14 @@ def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
     RAFT_model.to(device)
     RAFT_model.eval()
 
-  if subtract_background:
-    frame1 = background_subtractor(frame1, fgbg)
-    frame2 = background_subtractor(frame2, fgbg)
-
   with torch.no_grad():
-    frame1_torch = torch.from_numpy(frame1).permute(2, 0, 1).float()[None].to(device)
-    frame2_torch = torch.from_numpy(frame2).permute(2, 0, 1).float()[None].to(device)
+    if subtract_background:
+        frame1_torch = torch.from_numpy(frame1_bg_removed).permute(2, 0, 1).float()[None].to(device)
+        frame2_torch = torch.from_numpy(frame2_bg_removed).permute(2, 0, 1).float()[None].to(device)
+    else:
+        frame1_torch = torch.from_numpy(frame1).permute(2, 0, 1).float()[None].to(device)
+        frame2_torch = torch.from_numpy(frame2).permute(2, 0, 1).float()[None].to(device)
+
 
     padder = InputPadder(frame1_torch.shape)
     image1, image2 = padder.pad(frame1_torch, frame2_torch)
@@ -51,60 +46,28 @@ def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
     _, next_flow = RAFT_model(image1, image2, iters=20, test_mode=True)
     _, prev_flow = RAFT_model(image2, image1, iters=20, test_mode=True)
 
-    next_flow = next_flow[0].permute(1, 2, 0).cpu().numpy()
-    prev_flow = prev_flow[0].permute(1, 2, 0).cpu().numpy()
+    next_flow = next_flow[0].permute(1,2,0).cpu().numpy()
+    prev_flow = prev_flow[0].permute(1,2,0).cpu().numpy()
 
     fb_flow = next_flow + prev_flow
     fb_norm = np.linalg.norm(fb_flow, axis=2)
 
-    occlusion_mask = fb_norm[..., None].repeat(3, axis=-1)
+    occlusion_mask = fb_norm[..., None].repeat(3, axis = -1)
 
-  return next_flow, prev_flow, occlusion_mask, frame1, frame2
+  return next_flow, prev_flow, occlusion_mask
 
-# ... rest of the file ...
-
-
-def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_styled):
+def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_styled, sigma=5):
   h, w = cur_frame.shape[:2]
 
-  #print(np.amin(next_flow), np.amax(next_flow))
-  #exit()
-  
-
-  fl_w, fl_h = next_flow.shape[:2]
-
-  # normalize flow
-  next_flow = next_flow / np.array([fl_h,fl_w]) 
-  prev_flow = prev_flow / np.array([fl_h,fl_w])
-
-  # remove low value noise (@alexfredo suggestion)
-  next_flow[np.abs(next_flow) < 0.05] = 0
-  prev_flow[np.abs(prev_flow) < 0.05] = 0
-
-  # resize flow
-  next_flow = cv2.resize(next_flow, (w, h)) 
-  next_flow = (next_flow * np.array([h,w])).astype(np.float32)
+  next_flow = cv2.resize(next_flow, (w, h))
   prev_flow = cv2.resize(prev_flow, (w, h))
-  prev_flow = (prev_flow  * np.array([h,w])).astype(np.float32)
 
-  # Generate sampling grids
-  grid_y, grid_x = torch.meshgrid(torch.arange(0, h), torch.arange(0, w))
-  flow_grid = torch.stack((grid_x, grid_y), dim=0).float()
-  flow_grid += torch.from_numpy(prev_flow).permute(2, 0, 1)
-  flow_grid = flow_grid.unsqueeze(0)
-  flow_grid[:, 0, :, :] = 2 * flow_grid[:, 0, :, :] / (w - 1) - 1
-  flow_grid[:, 1, :, :] = 2 * flow_grid[:, 1, :, :] / (h - 1) - 1
-  flow_grid = flow_grid.permute(0, 2, 3, 1)
+  flow_map = -next_flow.copy()
+  flow_map[:,:,0] += np.arange(w)
+  flow_map[:,:,1] += np.arange(h)[:,np.newaxis]
 
-  
-  prev_frame_torch = torch.from_numpy(prev_frame).float().unsqueeze(0).permute(0, 3, 1, 2) #N, C, H, W
-  prev_frame_styled_torch = torch.from_numpy(prev_frame_styled).float().unsqueeze(0).permute(0, 3, 1, 2) #N, C, H, W
-
-  warped_frame = torch.nn.functional.grid_sample(prev_frame_torch, flow_grid, padding_mode="reflection").permute(0, 2, 3, 1)[0].numpy()
-  warped_frame_styled = torch.nn.functional.grid_sample(prev_frame_styled_torch, flow_grid, padding_mode="reflection").permute(0, 2, 3, 1)[0].numpy()
-
-  #warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)
-  #warped_frame_styled = cv2.remap(prev_frame_styled, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)
+  warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_NEAREST)
+  warped_frame_styled = cv2.remap(prev_frame_styled, flow_map, None, cv2.INTER_NEAREST)
 
   # compute occlusion mask
   fb_flow = next_flow + prev_flow
@@ -122,18 +85,8 @@ def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_sty
   alpha_mask = alpha_mask.repeat(3, axis = -1)
 
   #alpha_mask_blured = cv2.dilate(alpha_mask, np.ones((5, 5), np.float32))
-  alpha_mask = cv2.GaussianBlur(alpha_mask, (51,51), 5, cv2.BORDER_REFLECT)
+  alpha_mask = cv2.GaussianBlur(alpha_mask, (51, 51), sigma, cv2.BORDER_DEFAULT)
 
   alpha_mask = np.clip(alpha_mask, 0, 1)
 
   return alpha_mask, warped_frame_styled
-
-def frames_norm(occl): return occl / 127.5 - 1
-
-def flow_norm(flow): return flow / 255
-
-def occl_norm(occl): return occl / 127.5 - 1
-
-def flow_renorm(flow): return flow * 255
-
-def occl_renorm(occl): return (occl + 1) * 127.5
