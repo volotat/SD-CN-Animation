@@ -124,10 +124,10 @@ There are several ways overall quality of animation may be improved:
 * You may use a separate processing for each camera position to get a more consistent style of the characters and less ghosting.
 * Because the quality of the video depends on how good optical flow was estimated it might be beneficial to use high frame rate video as a source, so it would be easier to guess the flow properly.
 * The quality of flow estimation might be greatly improved with a proper flow estimation model like this one: https://github.com/autonomousvision/unimatch .
--->
+
 ## Licence
 This repository can only be used for personal/research/non-commercial purposes. However, for commercial requests, please contact me directly at borsky.alexey@gmail.com
-
+-->
 
 
 
