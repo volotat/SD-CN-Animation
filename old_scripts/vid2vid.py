@@ -11,18 +11,18 @@ from flow_utils import compute_diff_map
 import skimage
 import datetime
 
-INPUT_VIDEO = "input.mp4"
-FLOW_MAPS = "flow.h5"
+INPUT_VIDEO = "/media/alex/ded3efe6-5825-429d-ac89-7ded676a2b6d/media/Peter_Gabriel/pexels-monstera-5302599-4096x2160-30fps.mp4"
+FLOW_MAPS = "/media/alex/ded3efe6-5825-429d-ac89-7ded676a2b6d/media/Peter_Gabriel/pexels-monstera-5302599-4096x2160-30fps.h5"
 OUTPUT_VIDEO = f'videos/result_{datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")}.mp4'
 
-PROMPT = "Watercolor painting"
+PROMPT = "Underwater shot Peter Gabriel with closed eyes in  Peter Gabriel's music video. 80's music video. VHS style. Dramatic light, Cinematic light. RAW photo, 8k uhd, dslr, soft lighting, high quality, film grain."
 N_PROMPT = "(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
-w,h = 1024, 576 # Width and height of the processed image. Note that actual image processed would be a W x H resolution.
+w,h = 1088, 576 # Width and height of the processed image. Note that actual image processed would be a W x H resolution.
 
 START_FROM_IND = 0 # index of a frame to start a processing from. Might be helpful with long animations where you need to restart the script multiple times
 SAVE_FRAMES = True # saves individual frames into 'out' folder if set True. Again might be helpful with long animations
 
-PROCESSING_STRENGTH = 0.85
+PROCESSING_STRENGTH = 0.95
 BLUR_FIX_STRENGTH = 0.15
 
 APPLY_HED = True
@@ -75,12 +75,12 @@ class controlnetRequest():
         "input_image": b64_hed_img,
         "module": "hed",
         "model": "control_hed-fp16 [13fee50b]",
-        "weight": 0.85,
+        "weight": 0.65,
         "resize_mode": "Just Resize",
         "lowvram": False,
         "processor_res": 512,
         "guidance_start": 0,
-        "guidance_end": 0.85,
+        "guidance_end": 0.65,
         "guessmode": GUESSMODE
       })
 

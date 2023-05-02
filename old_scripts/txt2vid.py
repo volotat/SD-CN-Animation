@@ -18,11 +18,11 @@ import skimage
 import datetime
 
 
-OUTPUT_VIDEO = f'result_{datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")}.mp4'
+OUTPUT_VIDEO = f'videos/result_{datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")}.mp4'
 
-PROMPT = "RAW photo, bonfire near the camp in the mountains at night, 8k uhd, dslr, soft lighting, high quality, film grain, Fujifilm XT3"
+PROMPT = "people looking at flying robots. Future. People looking to the sky. Stars in the background. Dramatic light, Cinematic light. Soft lighting, high quality, film grain."
 N_PROMPT = "(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, letters, logo, brand, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
-w,h = 512, 512 # Width and height of the processed image. Note that actual image processed would be a W x H resolution.
+w,h = 768, 512 # Width and height of the processed image. Note that actual image processed would be a W x H resolution.
 
 SAVE_FRAMES = True # saves individual frames into 'out' folder if set True. Again might be helpful with long animations
 
@@ -128,7 +128,7 @@ prev_frame_styled = None
 
 # Instantiate the model
 model = FloweR(input_size = (h, w))
-model.load_state_dict(torch.load('FloweR/FloweR_0.1.pth'))
+model.load_state_dict(torch.load('FloweR/FloweR_0.1.1.pth'))
 # Move the model to the device
 model = model.to(DEVICE)
 
@@ -142,7 +142,7 @@ clip_frames = np.zeros((4, h, w, 3), dtype=np.uint8)
 
 color_shift = np.zeros((0, 3))
 color_scale = np.zeros((0, 3))
-for ind in tqdm(range(40)): 
+for ind in tqdm(range(450)): 
   clip_frames = np.roll(clip_frames, -1, axis=0)
   clip_frames[-1] = prev_frame
   
