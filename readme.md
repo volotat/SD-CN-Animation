@@ -50,7 +50,7 @@ All examples you can see here are originally generated at 512x512 resolution usi
 ## Installing the extension
 *TODO*
 
-Download RAFT 'raft-things.pth' from here: [RAFT link] and place it into 'stable-diffusion-webui/models/RAFT/' folder.
+Download RAFT 'raft-things.pth' from here: https://drive.google.com/drive/folders/1sWDsfuZ3Up38EUQt7-JDTT1HcGHuJgvT and place it into 'stable-diffusion-webui/models/RAFT/' folder.
 All generated video will be saved into 'outputs/sd-cn-animation' folder.
 
 ## Last version changes: v0.6
