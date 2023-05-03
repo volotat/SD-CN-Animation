@@ -167,6 +167,7 @@ def start_process(*args):
     processed_frames, _, _, _ = modules.img2img.img2img(*args_list) #img2img(args_dict)
     processed_frame = np.array(processed_frames[0])
     processed_frame = skimage.exposure.match_histograms(processed_frame, curr_frame, multichannel=False, channel_axis=-1)
+    processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
     #print('Processed frame ', 0)
     
 
