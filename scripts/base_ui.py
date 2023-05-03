@@ -4,7 +4,8 @@ basedirs = [os.getcwd()]
 for basedir in basedirs:
     paths_to_ensure = [
         basedir,
-        basedir + '/extensions/sd-cn-animation/scripts'
+        basedir + '/extensions/sd-cn-animation/scripts',
+        basedir + '/extensions/SD-CN-Animation/scripts'
         ]
 
     for scripts_path_fix in paths_to_ensure:
