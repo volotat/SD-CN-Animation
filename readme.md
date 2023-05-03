@@ -48,13 +48,13 @@ All examples you can see here are originally generated at 512x512 resolution usi
 
 
 ## Installing the extension
-~TODO~
+*TODO*
 
 Download RAFT 'raft-things.pth' from here: [RAFT link] and place it into 'stable-diffusion-webui/models/RAFT/' folder.
 All generated video will be saved into 'outputs/sd-cn-animation' folder.
 
 ## Last version changes: v0.6
-* Complete rewrite of the project to make it possible to install as a Automatic1111/Web-ui extension.
+* Complete rewrite of the project to make it possible to install as an Automatic1111/Web-ui extension.
 * Added separate flag '-rb' for background removal process at the flow computation stage in the compute_flow.py script.
 * Added flow normalization before rescaling it, so the magnitude of the flow computed correctly at the different resolution.
 * Less ghosting and color change in vid2vid mode
