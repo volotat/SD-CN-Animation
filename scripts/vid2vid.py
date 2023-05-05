@@ -24,7 +24,7 @@ from modules import devices, sd_samplers, img2img
 from modules import shared, sd_hijack, lowvram
 from modules.generation_parameters_copypaste import create_override_settings_dict
 from modules.processing import Processed, StableDiffusionProcessingImg2Img, process_images
-from modules.shared import opts, devices
+from modules.shared import opts, devices, state
 import modules.shared as shared
 import modules.processing as processing
 from modules.ui import plaintext_to_html
@@ -50,6 +50,7 @@ class sdcn_anim_tmp:
     curr_frame = None
     prev_frame = None
     prev_frame_styled = None
+    prev_frame_alpha_mask = None
     fps = None
     total_frames = None
     prepared_frames = None
@@ -92,7 +93,7 @@ def get_device():
     return device
 
 def args_to_dict(*args): # converts list of argumets into dictionary for better handling of it
-    args_list = ['id_task', 'mode', 'prompt', 'negative_prompt', 'prompt_styles', 'init_video', 'sketch', 'init_img_with_mask', 'inpaint_color_sketch', 'inpaint_color_sketch_orig', 'init_img_inpaint', 'init_mask_inpaint', 'steps', 'sampler_index', 'mask_blur', 'mask_alpha', 'inpainting_fill', 'restore_faces', 'tiling', 'n_iter', 'batch_size', 'cfg_scale', 'image_cfg_scale', 'denoising_strength', 'seed', 'subseed', 'subseed_strength', 'seed_resize_from_h', 'seed_resize_from_w', 'seed_enable_extras', 'height', 'width', 'resize_mode', 'inpaint_full_res', 'inpaint_full_res_padding', 'inpainting_mask_invert', 'img2img_batch_input_dir', 'img2img_batch_output_dir', 'img2img_batch_inpaint_mask_dir', 'override_settings_texts']
+    args_list = ['id_task', 'mode', 'prompt', 'negative_prompt', 'prompt_styles', 'init_video', 'sketch', 'init_img_with_mask', 'inpaint_color_sketch', 'inpaint_color_sketch_orig', 'init_img_inpaint', 'init_mask_inpaint', 'steps', 'sampler_index', 'mask_blur', 'mask_alpha', 'inpainting_fill', 'restore_faces', 'tiling', 'n_iter', 'batch_size', 'cfg_scale', 'image_cfg_scale', 'denoising_strength', 'fix_frame_strength', 'seed', 'subseed', 'subseed_strength', 'seed_resize_from_h', 'seed_resize_from_w', 'seed_enable_extras', 'height', 'width', 'resize_mode', 'inpaint_full_res', 'inpaint_full_res_padding', 'inpainting_mask_invert', 'img2img_batch_input_dir', 'img2img_batch_output_dir', 'img2img_batch_inpaint_mask_dir', 'override_settings_texts']
 
     # set default values for params that were not specified
     args_dict = {
@@ -114,6 +115,7 @@ def args_to_dict(*args): # converts list of argumets into dictionary for better 
         'cfg_scale': 5.5,
         'image_cfg_scale': 1.5,
         'denoising_strength': 0.75,
+        'fix_frame_strength': 0.15,
         'seed': -1,
         'subseed': -1,
         'subseed_strength': 0,
@@ -137,6 +139,8 @@ def args_to_dict(*args): # converts list of argumets into dictionary for better 
 
     args_dict['script_inputs'] = args[len(args_list):]
     return args_dict, args
+
+# TODO: Refactor all the code below
 
 def start_process(*args):
     args_dict, args_list = args_to_dict(*args) 
@@ -163,9 +167,9 @@ def start_process(*args):
     sdcn_anim_tmp.prepared_prev_flows = np.zeros((10, args_dict['height'], args_dict['width'], 2))
     sdcn_anim_tmp.prepared_frames[0] = curr_frame
 
-    #args_dict['init_img'] = cur_frame
-    args_list[5] = Image.fromarray(curr_frame)
-    processed_frames, _, _, _ = modules.img2img.img2img(*args_list) #img2img(args_dict)
+    args_dict['init_img'] = Image.fromarray(curr_frame)
+    #args_list[5] = Image.fromarray(curr_frame)
+    processed_frames, _, _, _ = img2img(args_dict)
     processed_frame = np.array(processed_frames[0])
     processed_frame = skimage.exposure.match_histograms(processed_frame, curr_frame, multichannel=False, channel_axis=-1)
     processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
@@ -176,8 +180,6 @@ def start_process(*args):
     sdcn_anim_tmp.prev_frame = curr_frame.copy()
     sdcn_anim_tmp.prev_frame_styled = processed_frame.copy()
     yield get_cur_stat(), sdcn_anim_tmp.curr_frame, None, None, processed_frame, ''
-
-    # TODO: SOLVE PROBLEM with wrong prev frame on the start on new processing iterations
 
     for step in range((sdcn_anim_tmp.total_frames-1) * 2):
         args_dict, args_list = args_to_dict(*args) 
@@ -229,14 +231,20 @@ def start_process(*args):
             prev_flow = sdcn_anim_tmp.prepared_prev_flows[cn]
 
             # process current frame
-            args_list[5] = Image.fromarray(curr_frame)
-            args_list[24] = -1
-            processed_frames, _, _, _ = modules.img2img.img2img(*args_list)
+            args_dict['init_img'] = Image.fromarray(curr_frame)
+            args_dict['seed'] = -1
+            #args_list[5] = Image.fromarray(curr_frame)
+            #args_list[24] = -1
+            processed_frames, _, _, _ = img2img(args_dict)
             processed_frame = np.array(processed_frames[0])
 
 
             alpha_mask, warped_styled_frame = compute_diff_map(next_flow, prev_flow, prev_frame, curr_frame, sdcn_anim_tmp.prev_frame_styled)
-            alpha_mask = np.clip(alpha_mask + 0.05, 0.05, 0.95)
+            if sdcn_anim_tmp.process_counter > 0:
+                alpha_mask = alpha_mask + sdcn_anim_tmp.prev_frame_alpha_mask * 0.5
+            sdcn_anim_tmp.prev_frame_alpha_mask = alpha_mask
+            # alpha_mask = np.clip(alpha_mask + 0.05, 0.05, 0.95)
+            alpha_mask = np.clip(alpha_mask, 0, 1)
 
             fl_w, fl_h = prev_flow.shape[:2]
             prev_flow_n = prev_flow / np.array([fl_h,fl_w])
@@ -258,10 +266,13 @@ def start_process(*args):
             processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
             sdcn_anim_tmp.prev_frame_styled = processed_frame.copy()
 
-            args_list[5] = Image.fromarray(processed_frame)
-            args_list[23] = 0.15
-            args_list[24] = 8888
-            processed_frames, _, _, _ = modules.img2img.img2img(*args_list)
+            args_dict['init_img'] = Image.fromarray(processed_frame)
+            args_dict['denoising_strength'] = args_dict['fix_frame_strength']
+            args_dict['seed'] = 8888
+            #args_list[5] = Image.fromarray(processed_frame)
+            #args_list[23] = 0.15
+            #args_list[24] = 8888
+            processed_frames, _, _, _ = img2img(args_dict)
             processed_frame = np.array(processed_frames[0])
 
             processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
@@ -287,7 +298,71 @@ def start_process(*args):
 
     return get_cur_stat(), curr_frame, occlusion_mask, warped_styled_frame, processed_frame, ''
 
-'''
+def process_img(p, input_img, output_dir, inpaint_mask_dir, args):
+    processing.fix_seed(p)
+
+    #images = shared.listfiles(input_dir)
+    images = [input_img]
+
+    is_inpaint_batch = False
+    #if inpaint_mask_dir:
+    #    inpaint_masks = shared.listfiles(inpaint_mask_dir)
+    #    is_inpaint_batch = len(inpaint_masks) > 0
+    #if is_inpaint_batch:
+    #    print(f"\nInpaint batch is enabled. {len(inpaint_masks)} masks found.")
+
+    #print(f"Will process {len(images)} images, creating {p.n_iter * p.batch_size} new images for each.")
+
+    save_normally = output_dir == ''
+
+    p.do_not_save_grid = True
+    p.do_not_save_samples = not save_normally
+
+    state.job_count = len(images) * p.n_iter
+
+    generated_images = []
+    for i, image in enumerate(images):
+        state.job = f"{i+1} out of {len(images)}"
+        if state.skipped:
+            state.skipped = False
+
+        if state.interrupted:
+            break
+
+        img = image #Image.open(image)
+        # Use the EXIF orientation of photos taken by smartphones.
+        img = ImageOps.exif_transpose(img)
+        p.init_images = [img] * p.batch_size
+
+        #if is_inpaint_batch:
+        #    # try to find corresponding mask for an image using simple filename matching
+        #    mask_image_path = os.path.join(inpaint_mask_dir, os.path.basename(image))
+        #    # if not found use first one ("same mask for all images" use-case)
+        #    if not mask_image_path in inpaint_masks:
+        #        mask_image_path = inpaint_masks[0]
+        #    mask_image = Image.open(mask_image_path)
+        #    p.image_mask = mask_image
+
+        proc = modules.scripts.scripts_img2img.run(p, *args)
+        if proc is None:
+            proc = process_images(p)
+            generated_images.append(proc.images[0])
+
+        #for n, processed_image in enumerate(proc.images):
+        #    filename = os.path.basename(image)
+
+        #    if n > 0:
+        #        left, right = os.path.splitext(filename)
+        #        filename = f"{left}-{n}{right}"
+
+        #    if not save_normally:
+        #        os.makedirs(output_dir, exist_ok=True)
+        #        if processed_image.mode == 'RGBA':
+        #            processed_image = processed_image.convert("RGB")
+        #        processed_image.save(os.path.join(output_dir, filename))
+
+    return generated_images
+
 # id_task: str, mode: int, prompt: str, negative_prompt: str, prompt_styles: list, init_img, sketch, init_img_with_mask, inpaint_color_sketch, inpaint_color_sketch_orig, init_img_inpaint, init_mask_inpaint, steps: int, sampler_index: int, mask_blur: int, mask_alpha: float, inpainting_fill: int, restore_faces: bool, tiling: bool, n_iter: int, batch_size: int, cfg_scale: float, image_cfg_scale: float, denoising_strength: float, seed: int, subseed: int, subseed_strength: float, seed_resize_from_h: int, seed_resize_from_w: int, seed_enable_extras: bool, height: int, width: int, resize_mode: int, inpaint_full_res: bool, inpaint_full_res_padding: int, inpainting_mask_invert: int, img2img_batch_input_dir: str, img2img_batch_output_dir: str, img2img_batch_inpaint_mask_dir: str, override_settings_texts, *args
 def img2img(args_dict):  
     args = SimpleNamespace(**args_dict)
@@ -375,7 +450,8 @@ def img2img(args_dict):
 
     if mask:
         p.extra_generation_params["Mask blur"] = args.mask_blur
-
+    
+    '''
     if is_batch:
         ...
     #    assert not shared.cmd_opts.hide_ui_dir_config, "Launched with --hide-ui-dir-config, batch img2img disabled"
@@ -385,7 +461,10 @@ def img2img(args_dict):
         processed = modules.scripts.scripts_img2img.run(p, *args.script_inputs)
         if processed is None:
             processed = process_images(p)
-    
+    '''
+
+    generated_images = process_img(p, image, None, '', args.script_inputs)
+    processed = Processed(p, [], p.seed, "")
     p.close()
 
     shared.total_tqdm.clear()
@@ -397,4 +476,4 @@ def img2img(args_dict):
     if opts.do_not_show_images:
         processed.images = []
 
-    return processed.images[0] #, generation_info_js, plaintext_to_html(processed.info), plaintext_to_html(processed.comments)'''
+    return generated_images, generation_info_js, plaintext_to_html(processed.info), plaintext_to_html(processed.comments)
