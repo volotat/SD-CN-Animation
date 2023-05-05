@@ -50,7 +50,7 @@ To install the extension go to 'Extensions' tab in [Automatic1111 web-ui](https:
 
 ## Last version changes: v0.6
 * Complete rewrite of the project to make it possible to install as an Automatic1111/Web-ui extension.
-* Added flow normalization before rescaling it, so the magnitude of the flow computed correctly at the different resolution.
+* Added flow normalization before resizing it, so the magnitude of the flow computed correctly at the different resolution.
 * Less ghosting and color drift in vid2vid mode
-* Added "warped styled frame fix" at vid2vid mode that removes image duplicated from the parts of the image that cannot be relocated from the optical flow.
+* Added "warped styled frame fix" at vid2vid mode that removes duplicates from the parts of the image that cannot be relocated from the optical flow.
 
