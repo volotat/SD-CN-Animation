@@ -87,6 +87,16 @@ def inputs_ui():
         #    vid2vid_frames_path = gr.Textbox(label="Input video path", interactive=True, elem_id="vid_to_vid_chosen_path", placeholder='Enter your video path here, or upload in the box above ^')
 
         width, height, prompt, n_prompt, cfg_scale, seed, processing_strength, fix_frame_strength = setup_common_values('vid2vid', v2v_args)
+
+        with FormRow(elem_id=f"sampler_selection_v2v"):
+            sampler_index = gr.Dropdown(label='Sampling method', elem_id=f"v2v_sampling", choices=[x.name for x in samplers_for_img2img], value=samplers_for_img2img[0].name, type="index")
+            steps = gr.Slider(minimum=1, maximum=150, step=1, elem_id=f"v2v_steps", label="Sampling steps", value=15)
+
+        with FormRow(elem_id="vid2vid_override_settings_row") as row:
+            override_settings = create_override_settings_dropdown("vid2vid", row)
+
+        with FormGroup(elem_id=f"script_container"):
+            custom_inputs = scripts.scripts_img2img.setup_ui()
         #with gr.Row():
         #    strength = gr.Slider(label="denoising strength", value=d.strength, minimum=0, maximum=1, step=0.05, interactive=True)
         #    vid2vid_startFrame=gr.Number(label='vid2vid start frame',value=d.vid2vid_startFrame)
@@ -115,20 +125,18 @@ def on_ui_tabs():
 
                 with gr.Tabs():
                     components = inputs_ui()
-                    print('components', components['processing_strength'])
-                    #do_vid2vid = gr.State(value=0)
 
-                    for category in ordered_ui_categories():
-                        if category == "sampler":
-                            steps, sampler_index = create_sampler_and_steps_selection(samplers_for_img2img, "vid2vid")
+                    #for category in ordered_ui_categories():
+                    #    if category == "sampler":
+                    #        steps, sampler_index = create_sampler_and_steps_selection(samplers_for_img2img, "vid2vid")
 
-                        elif category == "override_settings":
-                            with FormRow(elem_id="vid2vid_override_settings_row") as row:
-                                override_settings = create_override_settings_dropdown("vid2vid", row)
+                    #    elif category == "override_settings":
+                    #        with FormRow(elem_id="vid2vid_override_settings_row") as row:
+                    #            override_settings = create_override_settings_dropdown("vid2vid", row)
 
-                        elif category == "scripts":
-                            with FormGroup(elem_id=f"script_container"):
-                                custom_inputs = scripts.scripts_img2img.setup_ui()
+                    #    elif category == "scripts":
+                    #        with FormGroup(elem_id=f"script_container"):
+                    #            custom_inputs = scripts.scripts_img2img.setup_ui()
     
             with gr.Column(scale=1, variant='compact'):
                 with gr.Column(variant="panel"):
@@ -144,7 +152,6 @@ def on_ui_tabs():
                     with gr.Row(variant='compact'):
                         img_preview_prev_warp = gr.Image(label='Previous frame warped', elem_id=f"img_preview_curr_frame", type='pil').style(height=240)
                         img_preview_processed = gr.Image(label='Processed', elem_id=f"img_preview_processed", type='pil').style(height=240)
-                    #with gr.Row(variant='compact'):
                     
                     html_log = gr.HTML(elem_id=f'html_log_vid2vid')
                 
@@ -166,8 +173,8 @@ def on_ui_tabs():
                 dummy_component,                    # inpaint_color_sketch_orig
                 dummy_component,                    # init_img_inpaint
                 dummy_component,                    # init_mask_inpaint
-                steps,                              # steps
-                sampler_index,                      # sampler_index
+                components['steps'],                # steps
+                components['sampler_index'],        # sampler_index
                 dummy_component,                    # mask_blur
                 dummy_component,                    # mask_alpha
                 dummy_component,                    # inpainting_fill
@@ -194,8 +201,8 @@ def on_ui_tabs():
                 dummy_component,                    # img2img_batch_input_dir
                 dummy_component,                    # img2img_batch_output_dir
                 dummy_component,                    # img2img_batch_inpaint_mask_dir
-                override_settings,                  # override_settings_texts
-            ] + custom_inputs
+                components['override_settings'],    # override_settings_texts
+            ] + components['custom_inputs']
 
             method_outputs = [
                 sp_progress,

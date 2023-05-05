@@ -442,9 +442,6 @@ def img2img(args_dict):
     p.scripts = modules.scripts.scripts_txt2img
     p.script_args = args.script_inputs
 
-    print('script_inputs 1:', args.script_inputs[1].__dict__)
-    #print('script_inputs 2:', args.script_inputs[1])
-
     if shared.cmd_opts.enable_console_prompts:
         print(f"\nimg2img: {args.prompt}", file=shared.progress_print_out)
 
