@@ -178,6 +178,7 @@ def on_ui_tabs():
                 components['cfg_scale'],            # cfg_scale
                 dummy_component,                    # image_cfg_scale
                 components['processing_strength'],  # denoising_strength
+                components['fix_frame_strength'],   # fix_frame_strength
                 components['seed'],                 # seed
                 dummy_component,                    # subseed
                 dummy_component,                    # subseed_strength

@@ -132,10 +132,10 @@ def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_sty
   diff_mask_org = np.abs(warped_frame.astype(np.float32) - cur_frame.astype(np.float32)) / 255
   diff_mask_org = diff_mask_org.max(axis = -1, keepdims=True)
 
-  diff_mask_stl = np.abs(warped_frame_styled.astype(np.float32) - cur_frame.astype(np.float32)) / 255
-  diff_mask_stl = diff_mask_stl.max(axis = -1, keepdims=True)
+  #diff_mask_stl = np.abs(warped_frame_styled.astype(np.float32) - cur_frame.astype(np.float32)) / 255
+  #diff_mask_stl = diff_mask_stl.max(axis = -1, keepdims=True)
 
-  alpha_mask = np.maximum(occlusion_mask * 0.3, diff_mask_org * 4, diff_mask_stl * 2)
+  alpha_mask = np.maximum(occlusion_mask * 0.3, diff_mask_org * 3) #, diff_mask_stl * 2
   alpha_mask = alpha_mask.repeat(3, axis = -1)
 
   #alpha_mask_blured = cv2.dilate(alpha_mask, np.ones((5, 5), np.float32))
