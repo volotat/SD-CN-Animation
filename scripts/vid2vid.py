@@ -442,8 +442,8 @@ def img2img(args_dict):
     p.scripts = modules.scripts.scripts_txt2img
     p.script_args = args.script_inputs
 
-    if shared.cmd_opts.enable_console_prompts:
-        print(f"\nimg2img: {args.prompt}", file=shared.progress_print_out)
+    #if shared.cmd_opts.enable_console_prompts:
+    #    print(f"\nimg2img: {args.prompt}", file=shared.progress_print_out)
 
     if mask:
         p.extra_generation_params["Mask blur"] = args.mask_blur
