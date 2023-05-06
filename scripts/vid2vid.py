@@ -467,10 +467,10 @@ def img2img(args_dict):
     shared.total_tqdm.clear()
 
     generation_info_js = processed.js()
-    if opts.samples_log_stdout:
-        print(generation_info_js)
+    #if opts.samples_log_stdout:
+    #    print(generation_info_js)
 
-    if opts.do_not_show_images:
-        processed.images = []
+    #if opts.do_not_show_images:
+    #    processed.images = []
 
     return generated_images, generation_info_js, plaintext_to_html(processed.info), plaintext_to_html(processed.comments)
