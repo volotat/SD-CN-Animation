@@ -1,9 +1,11 @@
 # SD-CN-Animation
 This project allows you to automate video stylization task using StableDiffusion and ControlNet. It also allows you to generate completely new videos from text at any resolution and length in contrast to other current text2video methods using any Stable Diffusion model as a backbone, including custom ones. It uses '[RAFT](https://github.com/princeton-vl/RAFT)' optical flow estimation algorithm to keep the animation stable and create an occlusion mask that is used to generate the next frame. In text to video mode it relies on 'FloweR' method (work in progress) that predicts optical flow from the previous frames.
 
-
 ![sd-cn-animation ui preview](examples/ui_preview.png)
 sd-cn-animation ui preview
+
+Note: In vid2vid mode do not forget to activate any ControlNet model to achieve better results. Without it the resulting video might be quite choppy. I personally prefer to use 'hed' model with 0.65 control strength.
+
 
 ### Video to Video Examples:
 </table>
