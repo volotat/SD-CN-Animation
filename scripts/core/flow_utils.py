@@ -42,6 +42,15 @@ def RAFT_clear_memory():
 
 def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
   global RAFT_model
+
+  model_path = ph.models_path + '/RAFT/raft-things.pth'
+  remote_model_path = 'https://drive.google.com/uc?id=1MqDajR89k-xLV0HIrmJ0k-n8ZpG6_suM'
+
+  if not os.path.isfile(model_path):
+    from basicsr.utils.download_util import load_file_from_url
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    load_file_from_url(remote_model_path, file_name=model_path)
+
   if RAFT_model is None:
     args = argparse.Namespace(**{
         'model': ph.models_path + '/RAFT/raft-things.pth',
