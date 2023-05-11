@@ -94,7 +94,7 @@ def start_process(*args):
       args_dict = utils.get_mode_args('t2v', args_dict)
 
       clip_frames = np.roll(clip_frames, -1, axis=0)
-      clip_frames[-1] = cv2.resize(prev_frame, size)
+      clip_frames[-1] = cv2.resize(prev_frame[...,:3], size)
       clip_frames_torch = flow_utils.frames_norm(torch.from_numpy(clip_frames).to(DEVICE, dtype=torch.float32))
 
       with torch.no_grad():

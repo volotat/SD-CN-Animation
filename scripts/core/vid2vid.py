@@ -192,7 +192,7 @@ def start_process(*args):
         flow_mask = np.clip(1 - np.linalg.norm(prev_flow_n, axis=-1)[...,None], 0, 1)
 
         # fix warped styled frame from duplicated that occures on the places where flow is zero, but only because there is no place to get the color from
-        warped_styled_frame = curr_frame.astype(float) * alpha_mask * flow_mask + warped_styled_frame.astype(float) * (1 - alpha_mask * flow_mask)
+        warped_styled_frame = curr_frame[...,:3].astype(float) * alpha_mask * flow_mask + warped_styled_frame[...,:3].astype(float) * (1 - alpha_mask * flow_mask)
         
         # This clipping at lower side required to fix small trailing issues that for some reason left outside of the bright part of the mask, 
         # and at the higher part it making parts changed strongly to do it with less flickering. 
