@@ -4,7 +4,9 @@ This project allows you to automate video stylization task using StableDiffusion
 ![sd-cn-animation ui preview](examples/ui_preview.png)
 sd-cn-animation ui preview
 
-Note: In vid2vid mode do not forget to activate any ControlNet model to achieve better results. Without it the resulting video might be quite choppy. I personally prefer to use 'hed' model with 0.65 control strength.
+**In vid2vid mode do not forget to activate ControlNet model to achieve better results. Without it the resulting video might be quite choppy.**  
+Here are CN parameters that seem to give the best results so far:  
+![sd-cn-animation cn params](examples/cn_settings.png)
 
 
 ### Video to Video Examples:
@@ -63,3 +65,8 @@ To install the extension go to 'Extensions' tab in [Automatic1111 web-ui](https:
 * Fixed an issue with color drifting on some models.
 * Sampler type and sampling steps settings added to text2video mode.
 * Added automatic resizing before processing with RAFT and FloweR models.
+
+<!--
+## Last version changes: v0.9
+* Issue #76 fixed.
+-->
