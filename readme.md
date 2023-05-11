@@ -54,8 +54,12 @@ All examples you can see here are originally generated at 512x512 resolution usi
 ## Installing the extension
 To install the extension go to 'Extensions' tab in [Automatic1111 web-ui](https://github.com/AUTOMATIC1111/stable-diffusion-webui), then go to 'Install from URL' tab. In 'URL for extension's git repository' field inter the path to this repository, i.e. 'https://github.com/volotat/SD-CN-Animation.git'. Leave 'Local directory name' field empty. Then just press 'Install' button. Restart web-ui, new 'SD-CN-Animation' tab should appear. All generated video will be saved into 'stable-diffusion-webui/outputs/sd-cn-animation' folder.
 
-## Last version changes: v0.7
-* Text to Video mode added to the extension
-* 'Generate' button is now automatically disabled while the video is generated
-* Added 'Interrupt' button that allows to stop video generation process
-* Now all necessary models are automatically downloaded. No need for manual preparation.
+## Last version changes: v0.8
+* Better error handling. Fixes an issue when errors may not appear in the console.
+* Fixed an issue with deprecated variables. Should be a resolution of running the extension on other webui forks.
+* Slight improvements in vid2vid processing pipeline.
+* Video preview added to the UI. It will become available at the end of the processing.
+* Time elapsed/left indication added.
+* Fixed an issue with color drifting on some models.
+* Sampler type and sampling steps settings added to text2video mode.
+* Added automatic resizing before processing with RAFT and FloweR models.

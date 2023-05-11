@@ -18,43 +18,43 @@ class FloweR(nn.Module):
       nn.ReLU(),
     ) # 384 x 384 x 128
 
-    self.conv_block_2 = nn.Sequential(
+    self.conv_block_2 = nn.Sequential( # x128
       nn.AvgPool2d(2),
       nn.Conv2d(128, 128, kernel_size=3, stride=1, padding='same'),
       nn.ReLU(),
     ) # 192 x 192 x 128
 
-    self.conv_block_3 = nn.Sequential(
+    self.conv_block_3 = nn.Sequential( # x64
       nn.AvgPool2d(2),
       nn.Conv2d(128, 128, kernel_size=3, stride=1, padding='same'),
       nn.ReLU(),
     ) # 96 x 96 x 128
 
-    self.conv_block_4 = nn.Sequential(
+    self.conv_block_4 = nn.Sequential( # x32
       nn.AvgPool2d(2),
       nn.Conv2d(128, 128, kernel_size=3, stride=1, padding='same'),
       nn.ReLU(),
     ) # 48 x 48 x 128
 
-    self.conv_block_5 = nn.Sequential(
+    self.conv_block_5 = nn.Sequential( # x16
       nn.AvgPool2d(2),
       nn.Conv2d(128, 128, kernel_size=3, stride=1, padding='same'),
       nn.ReLU(),
     ) # 24 x 24 x 128
 
-    self.conv_block_6 = nn.Sequential(
+    self.conv_block_6 = nn.Sequential( # x8
       nn.AvgPool2d(2),
       nn.Conv2d(128, 128, kernel_size=3, stride=1, padding='same'),
       nn.ReLU(),
     ) # 12 x 12 x 128
 
-    self.conv_block_7 = nn.Sequential(
+    self.conv_block_7 = nn.Sequential( # x4
       nn.AvgPool2d(2),
       nn.Conv2d(128, 128, kernel_size=3, stride=1, padding='same'),
       nn.ReLU(),
     ) # 6 x 6 x 128
 
-    self.conv_block_8 = nn.Sequential(
+    self.conv_block_8 = nn.Sequential( # x2
       nn.AvgPool2d(2),
       nn.Conv2d(128, 128, kernel_size=3, stride=1, padding='same'),
       nn.ReLU(),

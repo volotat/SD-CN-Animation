@@ -28,6 +28,7 @@ from modules.sd_samplers import samplers_for_img2img
 from modules.ui import setup_progressbar, create_sampler_and_steps_selection, ordered_ui_categories, create_output_panel
 
 from core import vid2vid, txt2vid, utils
+import traceback
 
 def V2VArgs():
     seed = -1
@@ -62,15 +63,17 @@ def setup_common_values(mode, d):
     with gr.Row(elem_id=f'{mode}_n_prompt_toprow'):
         n_prompt = gr.Textbox(label='Negative prompt', lines=3, interactive=True, elem_id=f"{mode}_n_prompt", value=d.n_prompt)
     with gr.Row():
-        #steps = gr.Slider(label='Steps', minimum=1, maximum=100, step=1, value=d.steps, interactive=True)
         cfg_scale = gr.Slider(label='CFG scale', minimum=1, maximum=100, step=1, value=d.cfg_scale, interactive=True)
     with gr.Row():
         seed = gr.Number(label='Seed (this parameter controls how the first frame looks like and the color distribution of the consecutive frames as they are dependent on the first one)', value = d.seed, Interactive = True, precision=0)
     with gr.Row():
         processing_strength = gr.Slider(label="Processing strength", value=d.processing_strength, minimum=0, maximum=1, step=0.05, interactive=True)
         fix_frame_strength = gr.Slider(label="Fix frame strength", value=d.fix_frame_strength, minimum=0, maximum=1, step=0.05, interactive=True)
+    with gr.Row():
+        sampler_index = gr.Dropdown(label='Sampling method', elem_id=f"{mode}_sampling", choices=[x.name for x in samplers_for_img2img], value=samplers_for_img2img[0].name, type="index", interactive=True)
+        steps = gr.Slider(label="Sampling steps", minimum=1, maximum=150, step=1, elem_id=f"{mode}_steps", value=d.steps, interactive=True)
 
-    return width, height, prompt, n_prompt, cfg_scale, seed, processing_strength, fix_frame_strength
+    return width, height, prompt, n_prompt, cfg_scale, seed, processing_strength, fix_frame_strength, sampler_index, steps
 
 def inputs_ui():
     v2v_args = SimpleNamespace(**V2VArgs())
@@ -83,29 +86,17 @@ def inputs_ui():
                 gr.HTML('Put your video here')
             with gr.Row():
                 v2v_file = gr.File(label="Input video", interactive=True, file_count="single", file_types=["video"], elem_id="vid_to_vid_chosen_file")
-                #init_img = gr.Image(label="Image for img2img", elem_id="img2img_image", show_label=False, source="upload", interactive=True, type="pil", image_mode="RGBA")
-            #with gr.Row():
-            #    gr.HTML('Alternative: enter the relative (to the webui) path to the file')
-            #with gr.Row():
-            #    vid2vid_frames_path = gr.Textbox(label="Input video path", interactive=True, elem_id="vid_to_vid_chosen_path", placeholder='Enter your video path here, or upload in the box above ^')
 
-            v2v_width, v2v_height, v2v_prompt, v2v_n_prompt, v2v_cfg_scale, v2v_seed, v2v_processing_strength, v2v_fix_frame_strength = setup_common_values('vid2vid', v2v_args)
-
-            with FormRow(elem_id=f"sampler_selection_v2v"):
-                v2v_sampler_index = gr.Dropdown(label='Sampling method', elem_id=f"v2v_sampling", choices=[x.name for x in samplers_for_img2img], value=samplers_for_img2img[0].name, type="index")
-                v2v_steps = gr.Slider(minimum=1, maximum=150, step=1, elem_id=f"v2v_steps", label="Sampling steps", value=15)
+            v2v_width, v2v_height, v2v_prompt, v2v_n_prompt, v2v_cfg_scale, v2v_seed, v2v_processing_strength, v2v_fix_frame_strength, v2v_sampler_index, v2v_steps = setup_common_values('vid2vid', v2v_args)
 
             with FormRow(elem_id="vid2vid_override_settings_row") as row:
                 v2v_override_settings = create_override_settings_dropdown("vid2vid", row)
 
             with FormGroup(elem_id=f"script_container"):
                 v2v_custom_inputs = scripts.scripts_img2img.setup_ui()
-            #with gr.Row():
-            #    strength = gr.Slider(label="denoising strength", value=d.strength, minimum=0, maximum=1, step=0.05, interactive=True)
-            #    vid2vid_startFrame=gr.Number(label='vid2vid start frame',value=d.vid2vid_startFrame)
             
         with gr.Tab('txt2vid') as tab_txt2vid:
-            t2v_width, t2v_height, t2v_prompt, t2v_n_prompt, t2v_cfg_scale, t2v_seed, t2v_processing_strength, t2v_fix_frame_strength = setup_common_values('txt2vid', t2v_args)
+            t2v_width, t2v_height, t2v_prompt, t2v_n_prompt, t2v_cfg_scale, t2v_seed, t2v_processing_strength, t2v_fix_frame_strength, t2v_sampler_index, t2v_steps = setup_common_values('txt2vid', t2v_args)
             with gr.Row():
                 t2v_length = gr.Slider(label='Length (in frames)', minimum=10, maximum=2048, step=10, value=40, interactive=True)
                 t2v_fps = gr.Slider(label='Video FPS', minimum=4, maximum=64, step=4, value=12, interactive=True)
@@ -117,12 +108,22 @@ def inputs_ui():
     return locals()
 
 def process(*args):
-    if args[0] == 'vid2vid':
-        yield from vid2vid.start_process(*args)
-    elif args[0] == 'txt2vid':
-        yield from txt2vid.start_process(*args)
-    else:
-        raise Exception(f"Unsupported processing mode: '{args[0]}'")
+    msg = 'Done'
+    try:    
+        if args[0] == 'vid2vid':
+            yield from vid2vid.start_process(*args)
+        elif args[0] == 'txt2vid':
+            yield from txt2vid.start_process(*args)
+        else:
+            msg = f"Unsupported processing mode: '{args[0]}'"
+            raise Exception(msg)
+    except Exception as error:
+        # handle the exception
+        msg = f"An exception occurred while trying to process the frame: {error}"
+        print(msg)
+        traceback.print_exc()
+    
+    yield msg, gr.Image.update(), gr.Image.update(), gr.Image.update(), gr.Image.update(), gr.Video.update(), gr.Button.update(interactive=True), gr.Button.update(interactive=False)
 
 def stop_process(*args):
     utils.shared.is_interrupted = True
@@ -140,18 +141,6 @@ def on_ui_tabs():
             with gr.Column(scale=1, variant='panel'):
                 with gr.Tabs():
                     components = inputs_ui()
-
-                    #for category in ordered_ui_categories():
-                    #    if category == "sampler":
-                    #        steps, sampler_index = create_sampler_and_steps_selection(samplers_for_img2img, "vid2vid")
-
-                    #    elif category == "override_settings":
-                    #        with FormRow(elem_id="vid2vid_override_settings_row") as row:
-                    #            override_settings = create_override_settings_dropdown("vid2vid", row)
-
-                    #    elif category == "scripts":
-                    #        with FormGroup(elem_id=f"script_container"):
-                    #            custom_inputs = scripts.scripts_img2img.setup_ui()
     
             with gr.Column(scale=1, variant='compact'):
                 with gr.Row(variant='compact'):
@@ -172,7 +161,8 @@ def on_ui_tabs():
                         img_preview_prev_warp = gr.Image(label='Previous frame warped', elem_id=f"img_preview_curr_frame", type='pil').style(height=240)
                         img_preview_processed = gr.Image(label='Processed', elem_id=f"img_preview_processed", type='pil').style(height=240)
                     
-                    html_log = gr.HTML(elem_id=f'html_log_vid2vid')
+                    # html_log = gr.HTML(elem_id=f'html_log_vid2vid')
+                    video_preview = gr.Video(interactive=False)
                 
                 with gr.Row(variant='compact'):
                     dummy_component = gr.Label(visible=False)
@@ -186,9 +176,9 @@ def on_ui_tabs():
                 img_preview_curr_occl,
                 img_preview_prev_warp,
                 img_preview_processed,
-                html_log,
+                video_preview,
                 run_button,
-                stop_button
+                stop_button,
             ]
 
             run_button.click(

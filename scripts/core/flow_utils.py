@@ -43,6 +43,11 @@ def RAFT_clear_memory():
 def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
   global RAFT_model
 
+  org_size = frame1.shape[1], frame1.shape[0]
+  size = frame1.shape[1] // 16 * 16, frame1.shape[0] // 16 * 16
+  frame1 = cv2.resize(frame1, size)
+  frame2 = cv2.resize(frame2, size)
+
   model_path = ph.models_path + '/RAFT/raft-things.pth'
   remote_model_path = 'https://drive.google.com/uc?id=1MqDajR89k-xLV0HIrmJ0k-n8ZpG6_suM'
 
@@ -67,9 +72,9 @@ def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
     RAFT_model.to(device)
     RAFT_model.eval()
 
-  if subtract_background:
-    frame1 = background_subtractor(frame1, fgbg)
-    frame2 = background_subtractor(frame2, fgbg)
+  #if subtract_background:
+  #  frame1 = background_subtractor(frame1, fgbg)
+  #  frame2 = background_subtractor(frame2, fgbg)
 
   with torch.no_grad():
     frame1_torch = torch.from_numpy(frame1).permute(2, 0, 1).float()[None].to(device)
@@ -90,10 +95,10 @@ def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
 
     occlusion_mask = fb_norm[..., None].repeat(3, axis=-1)
 
-  return next_flow, prev_flow, occlusion_mask, frame1, frame2
+  next_flow = cv2.resize(next_flow, org_size)
+  prev_flow = cv2.resize(prev_flow, org_size)
 
-# ... rest of the file ...
-
+  return next_flow, prev_flow, occlusion_mask #, frame1, frame2
 
 def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_styled):
   h, w = cur_frame.shape[:2]
@@ -144,7 +149,7 @@ def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_sty
   #diff_mask_stl = np.abs(warped_frame_styled.astype(np.float32) - cur_frame.astype(np.float32)) / 255
   #diff_mask_stl = diff_mask_stl.max(axis = -1, keepdims=True)
 
-  alpha_mask = np.maximum(occlusion_mask * 0.3, diff_mask_org * 3) #, diff_mask_stl * 2
+  alpha_mask = np.maximum(occlusion_mask * 0.3, diff_mask_org * 4) #, diff_mask_stl * 2
   alpha_mask = alpha_mask.repeat(3, axis = -1)
 
   #alpha_mask_blured = cv2.dilate(alpha_mask, np.ones((5, 5), np.float32))

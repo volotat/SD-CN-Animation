@@ -7,7 +7,7 @@ def get_component_names():
     'v2v_file', 'v2v_width', 'v2v_height', 'v2v_prompt', 'v2v_n_prompt', 'v2v_cfg_scale', 'v2v_seed', 'v2v_processing_strength', 'v2v_fix_frame_strength', 
     'v2v_sampler_index', 'v2v_steps', 'v2v_override_settings',
     't2v_width', 't2v_height', 't2v_prompt', 't2v_n_prompt', 't2v_cfg_scale', 't2v_seed', 't2v_processing_strength', 't2v_fix_frame_strength',
-    't2v_length', 't2v_fps'
+    'v2v_sampler_index', 'v2v_steps', 't2v_length', 't2v_fps'
   ]
 
   return components_list
@@ -114,6 +114,15 @@ def set_CNs_input_image(args_dict, image):
     if type(script_input).__name__ == 'UiControlNetUnit':
       script_input.batch_images = [image]
 
+import time
+import datetime
+
+def get_time_left(ind, length, processing_start_time):
+  s_passed = int(time.time() - processing_start_time)
+  time_passed = datetime.timedelta(seconds=s_passed)
+  s_left = int(s_passed / ind * (length - ind))
+  time_left = datetime.timedelta(seconds=s_left)
+  return f"Time elapsed: {time_passed}; Time left: {time_left};"
 
 import numpy as np
 from PIL import Image, ImageOps, ImageFilter, ImageEnhance, ImageChops
