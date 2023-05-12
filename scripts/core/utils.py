@@ -7,7 +7,7 @@ def get_component_names():
     'v2v_file', 'v2v_width', 'v2v_height', 'v2v_prompt', 'v2v_n_prompt', 'v2v_cfg_scale', 'v2v_seed', 'v2v_processing_strength', 'v2v_fix_frame_strength', 
     'v2v_sampler_index', 'v2v_steps', 'v2v_override_settings',
     't2v_width', 't2v_height', 't2v_prompt', 't2v_n_prompt', 't2v_cfg_scale', 't2v_seed', 't2v_processing_strength', 't2v_fix_frame_strength',
-    'v2v_sampler_index', 'v2v_steps', 't2v_length', 't2v_fps'
+    't2v_sampler_index', 't2v_steps', 't2v_length', 't2v_fps'
   ]
 
   return components_list
