@@ -89,7 +89,7 @@ def args_to_dict(*args): # converts list of argumets into dictionary for better 
     't2v_inpainting_mask_invert': False,
 
     't2v_override_settings': [],
-    't2v_script_inputs': [0],
+    #'t2v_script_inputs': [0],
 
     't2v_fps': 12,
   }
@@ -103,6 +103,7 @@ def args_to_dict(*args): # converts list of argumets into dictionary for better 
           args_dict[args_list[i]] = args[i]
 
   args_dict['v2v_script_inputs'] = args[len(args_list):]
+  args_dict['t2v_script_inputs'] = args[len(args_list):] #do it for both
   return args_dict
 
 def get_mode_args(mode, args_dict):
@@ -286,7 +287,7 @@ def img2img(args_dict):
         override_settings=override_settings,
     )
 
-    p.scripts = modules.scripts.scripts_txt2img
+    p.scripts = modules.scripts.scripts_img2img
     p.script_args = args.script_inputs
 
     #if shared.cmd_opts.enable_console_prompts:
