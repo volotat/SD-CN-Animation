@@ -1,16 +1,4 @@
 import sys, os
-basedirs = [os.getcwd()]
-
-for basedir in basedirs:
-    paths_to_ensure = [
-        basedir,
-        basedir + '/extensions/sd-cn-animation/scripts',
-        basedir + '/extensions/SD-CN-Animation/scripts'
-        ]
-
-    for scripts_path_fix in paths_to_ensure:
-        if not scripts_path_fix in sys.path:
-            sys.path.extend([scripts_path_fix])
 
 import torch
 import gc
@@ -20,7 +8,7 @@ from PIL import Image
 import modules.paths as ph
 from modules.shared import devices
 
-from core import utils, flow_utils
+from scripts.core import utils, flow_utils
 from FloweR.model import FloweR
 
 import skimage

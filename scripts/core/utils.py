@@ -3,7 +3,7 @@ class shared:
 
 def get_component_names():
   components_list = [
-    'sdcn_process_mode',
+    'glo_sdcn_process_mode',
     'v2v_file', 'v2v_width', 'v2v_height', 'v2v_prompt', 'v2v_n_prompt', 'v2v_cfg_scale', 'v2v_seed', 'v2v_processing_strength', 'v2v_fix_frame_strength', 
     'v2v_sampler_index', 'v2v_steps', 'v2v_override_settings',
     'v2v_occlusion_mask_blur', 'v2v_occlusion_mask_trailing', 'v2v_occlusion_mask_flow_multiplier', 'v2v_occlusion_mask_difo_multiplier', 'v2v_occlusion_mask_difs_multiplier',

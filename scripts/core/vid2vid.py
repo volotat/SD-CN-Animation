@@ -1,16 +1,4 @@
 import sys, os
-basedirs = [os.getcwd()]
-
-for basedir in basedirs:
-    paths_to_ensure = [
-        basedir,
-        basedir + '/extensions/sd-cn-animation/scripts',
-        basedir + '/extensions/SD-CN-Animation/scripts'
-        ]
-
-    for scripts_path_fix in paths_to_ensure:
-        if not scripts_path_fix in sys.path:
-            sys.path.extend([scripts_path_fix])
 
 import math
 import os
@@ -34,8 +22,8 @@ import time
 import skimage
 import datetime
 
-from core.flow_utils import RAFT_estimate_flow, RAFT_clear_memory, compute_diff_map
-from core import utils
+from scripts.core.flow_utils import RAFT_estimate_flow, RAFT_clear_memory, compute_diff_map
+from scripts.core import utils
 
 class sdcn_anim_tmp:
   prepear_counter = 0

@@ -56,10 +56,16 @@ All examples you can see here are originally generated at 512x512 resolution usi
 ## Installing the extension
 To install the extension go to 'Extensions' tab in [Automatic1111 web-ui](https://github.com/AUTOMATIC1111/stable-diffusion-webui), then go to 'Install from URL' tab. In 'URL for extension's git repository' field inter the path to this repository, i.e. 'https://github.com/volotat/SD-CN-Animation.git'. Leave 'Local directory name' field empty. Then just press 'Install' button. Restart web-ui, new 'SD-CN-Animation' tab should appear. All generated video will be saved into 'stable-diffusion-webui/outputs/sd-cn-animation' folder.
 
+## Known issues
+* If you see error like this ```IndexError: list index out of range``` try to restart webui, it should fix it.
+* The extension might work incorrectly if 'Apply color correction to img2img results to match original colors.' option is enabled. Make sure to disable it in 'Settings' tab -> 'Stable Diffusion' section. 
+
 ## Last version changes: v0.9
-* Issue #76 fixed.
+* Fixed issues #69, #76, #91.
 * Fixed an issue in vid2vid mode when an occlusion mask computed from the optical flow may include unnecessary parts (where flow is non-zero).
 * Added 'Extra params' in vid2vid mode for more fine-grain controls of the processing pipeline.
 * Better default parameters set for vid2vid pipeline.
 * In txt2vid mode after the first frame is generated the seed is now automatically set to -1 to prevent blurring issues.
 * Added an option to save resulting frames into a folder alongside the video.
+* Added ability to export current parameters in a human readable form as a json.
+
