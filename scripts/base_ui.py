@@ -67,8 +67,8 @@ def setup_common_values(mode, d):
     with gr.Row():
         seed = gr.Number(label='Seed (this parameter controls how the first frame looks like and the color distribution of the consecutive frames as they are dependent on the first one)', value = d.seed, Interactive = True, precision=0)
     with gr.Row():
-        processing_strength = gr.Slider(label="Processing strength", value=d.processing_strength, minimum=0, maximum=1, step=0.05, interactive=True)
-        fix_frame_strength = gr.Slider(label="Fix frame strength", value=d.fix_frame_strength, minimum=0, maximum=1, step=0.05, interactive=True)
+        processing_strength = gr.Slider(label="Processing strength (Step 1)", value=d.processing_strength, minimum=0, maximum=1, step=0.05, interactive=True)
+        fix_frame_strength = gr.Slider(label="Fix frame strength (Step 2)", value=d.fix_frame_strength, minimum=0, maximum=1, step=0.05, interactive=True)
     with gr.Row():
         sampler_index = gr.Dropdown(label='Sampling method', elem_id=f"{mode}_sampling", choices=[x.name for x in samplers_for_img2img], value=samplers_for_img2img[0].name, type="index", interactive=True)
         steps = gr.Slider(label="Sampling steps", minimum=1, maximum=150, step=1, elem_id=f"{mode}_steps", value=d.steps, interactive=True)
@@ -83,11 +83,37 @@ def inputs_ui():
 
         with gr.Tab('vid2vid') as tab_vid2vid:
             with gr.Row():
-                gr.HTML('Put your video here')
+                gr.HTML('Put your video here:')
             with gr.Row():
                 v2v_file = gr.File(label="Input video", interactive=True, file_count="single", file_types=["video"], elem_id="vid_to_vid_chosen_file")
 
             v2v_width, v2v_height, v2v_prompt, v2v_n_prompt, v2v_cfg_scale, v2v_seed, v2v_processing_strength, v2v_fix_frame_strength, v2v_sampler_index, v2v_steps = setup_common_values('vid2vid', v2v_args)
+            
+            with gr.Accordion("Extra settings",open=False):
+              gr.HTML('# Occlusion mask params:')
+              with gr.Row():
+                with gr.Column(scale=1, variant='compact'):
+                  v2v_occlusion_mask_blur = gr.Slider(label='Occlusion blur strength', minimum=0, maximum=10, step=0.1, value=3, interactive=True) 
+                  gr.HTML('')
+                  v2v_occlusion_mask_trailing = gr.Checkbox(label="Occlusion trailing", info="Reduce ghosting but adds more flickering to the video", value=True, interactive=True)
+                with gr.Column(scale=1, variant='compact'):
+                  v2v_occlusion_mask_flow_multiplier = gr.Slider(label='Occlusion flow multiplier', minimum=0, maximum=10, step=0.1, value=5, interactive=True) 
+                  v2v_occlusion_mask_difo_multiplier = gr.Slider(label='Occlusion diff origin multiplier', minimum=0, maximum=10, step=0.1, value=2, interactive=True)
+                  v2v_occlusion_mask_difs_multiplier = gr.Slider(label='Occlusion diff styled multiplier', minimum=0, maximum=10, step=0.1, value=0, interactive=True)
+
+              with gr.Row():
+                with gr.Column(scale=1, variant='compact'):
+                  gr.HTML('# Step 1 params:')
+                  v2v_step_1_seed = gr.Number(label='Seed', value = -1, Interactive = True, precision=0)
+                  gr.HTML('<br>')
+                  v2v_step_1_blend_alpha = gr.Slider(label='Warped prev frame vs Current frame blend alpha', minimum=0, maximum=1, step=0.1, value=1, interactive=True) 
+                  v2v_step_1_processing_mode = gr.Radio(["Process full image then blend in occlusions", "Inpaint occlusions"], type="index", \
+                                                        label="Processing mode", value="Process full image then blend in occlusions", interactive=True)
+                  
+                  
+                with gr.Column(scale=1, variant='compact'):
+                  gr.HTML('# Step 2 params:')
+                  v2v_step_2_seed = gr.Number(label='Seed', value = 8888, Interactive = True, precision=0)
 
             with FormRow(elem_id="vid2vid_override_settings_row") as row:
                 v2v_override_settings = create_override_settings_dropdown("vid2vid", row)
@@ -146,6 +172,9 @@ def on_ui_tabs():
                 with gr.Row(variant='compact'):
                     run_button = gr.Button('Generate', elem_id=f"sdcn_anim_generate", variant='primary')
                     stop_button = gr.Button('Interrupt', elem_id=f"sdcn_anim_interrupt", variant='primary', interactive=False)
+                
+                save_frames_check = gr.Checkbox(label="Save frames into a folder nearby a video (check it before running the generation if you also want to save frames separately)", value=False, interactive=True)
+                gr.HTML('<br>')
 
                 with gr.Column(variant="panel"):
                     sp_progress = gr.HTML(elem_id="sp_progress", value="")
@@ -166,6 +195,8 @@ def on_ui_tabs():
                 
                 with gr.Row(variant='compact'):
                     dummy_component = gr.Label(visible=False)
+
+            components['glo_save_frames_check'] = save_frames_check
 
             # Define parameters for the action methods.
             method_inputs = [components[name] for name in utils.get_component_names()] + components['v2v_custom_inputs']

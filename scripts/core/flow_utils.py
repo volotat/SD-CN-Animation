@@ -40,7 +40,7 @@ def RAFT_clear_memory():
   torch.cuda.empty_cache()
   RAFT_model = None
 
-def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
+def RAFT_estimate_flow(frame1, frame2, device='cuda'):
   global RAFT_model
 
   org_size = frame1.shape[1], frame1.shape[0]
@@ -72,10 +72,6 @@ def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
     RAFT_model.to(device)
     RAFT_model.eval()
 
-  #if subtract_background:
-  #  frame1 = background_subtractor(frame1, fgbg)
-  #  frame2 = background_subtractor(frame2, fgbg)
-
   with torch.no_grad():
     frame1_torch = torch.from_numpy(frame1).permute(2, 0, 1).float()[None].to(device)
     frame2_torch = torch.from_numpy(frame2).permute(2, 0, 1).float()[None].to(device)
@@ -98,9 +94,9 @@ def RAFT_estimate_flow(frame1, frame2, device='cuda', subtract_background=True):
   next_flow = cv2.resize(next_flow, org_size)
   prev_flow = cv2.resize(prev_flow, org_size)
 
-  return next_flow, prev_flow, occlusion_mask #, frame1, frame2
+  return next_flow, prev_flow, occlusion_mask
 
-def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_styled):
+def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_styled, args_dict):
   h, w = cur_frame.shape[:2]
   fl_w, fl_h = next_flow.shape[:2]
 
@@ -108,9 +104,12 @@ def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_sty
   next_flow = next_flow / np.array([fl_h,fl_w]) 
   prev_flow = prev_flow / np.array([fl_h,fl_w])
 
-  # remove low value noise (@alexfredo suggestion)
-  next_flow[np.abs(next_flow) < 0.05] = 0
-  prev_flow[np.abs(prev_flow) < 0.05] = 0
+  # compute occlusion mask
+  fb_flow = next_flow + prev_flow
+  fb_norm = np.linalg.norm(fb_flow , axis=2) 
+
+  zero_flow_mask = np.clip(1 - np.linalg.norm(prev_flow, axis=-1)[...,None] * 20, 0, 1)
+  diff_mask_flow = fb_norm[..., None] * zero_flow_mask
 
   # resize flow
   next_flow = cv2.resize(next_flow, (w, h)) 
@@ -137,23 +136,22 @@ def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_sty
   #warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)
   #warped_frame_styled = cv2.remap(prev_frame_styled, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)
 
-  # compute occlusion mask
-  fb_flow = next_flow + prev_flow
-  fb_norm = np.linalg.norm(fb_flow, axis=2)
-
-  occlusion_mask = fb_norm[..., None] 
-
+  
   diff_mask_org = np.abs(warped_frame.astype(np.float32) - cur_frame.astype(np.float32)) / 255
   diff_mask_org = diff_mask_org.max(axis = -1, keepdims=True)
 
-  #diff_mask_stl = np.abs(warped_frame_styled.astype(np.float32) - cur_frame.astype(np.float32)) / 255
-  #diff_mask_stl = diff_mask_stl.max(axis = -1, keepdims=True)
+  diff_mask_stl = np.abs(warped_frame_styled.astype(np.float32) - cur_frame.astype(np.float32)) / 255
+  diff_mask_stl = diff_mask_stl.max(axis = -1, keepdims=True)
 
-  alpha_mask = np.maximum(occlusion_mask * 0.3, diff_mask_org * 4) #, diff_mask_stl * 2
+  alpha_mask = np.maximum.reduce([diff_mask_flow * args_dict['occlusion_mask_flow_multiplier'] * 10, \
+                                  diff_mask_org * args_dict['occlusion_mask_difo_multiplier'], \
+                                  diff_mask_stl * args_dict['occlusion_mask_difs_multiplier']]) #
   alpha_mask = alpha_mask.repeat(3, axis = -1)
 
   #alpha_mask_blured = cv2.dilate(alpha_mask, np.ones((5, 5), np.float32))
-  alpha_mask = cv2.GaussianBlur(alpha_mask, (51,51), 5, cv2.BORDER_REFLECT)
+  if args_dict['occlusion_mask_blur'] > 0:
+    blur_filter_size = min(w,h) // 15 | 1
+    alpha_mask = cv2.GaussianBlur(alpha_mask, (blur_filter_size, blur_filter_size) , args_dict['occlusion_mask_blur'], cv2.BORDER_REFLECT)
 
   alpha_mask = np.clip(alpha_mask, 0, 1)
 
