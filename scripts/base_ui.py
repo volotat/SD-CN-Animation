@@ -115,10 +115,10 @@ def inputs_ui():
                 t2v_length = gr.Slider(label='Length (in frames)', minimum=10, maximum=2048, step=10, value=40, interactive=True)
                 t2v_fps = gr.Slider(label='Video FPS', minimum=4, maximum=64, step=4, value=12, interactive=True)
              with FormRow(elem_id="txt2vid_override_settings_row") as row:
-                v2v_override_settings = create_override_settings_dropdown("txt2vid", row)
+                t2v_override_settings = create_override_settings_dropdown("txt2vid", row)
 
             with FormGroup(elem_id=f"script_container"):
-                v2v_custom_inputs = scripts.scripts_txt2img.setup_ui()
+                t2v_custom_inputs = scripts.scripts_txt2img.setup_ui()
     
     tab_vid2vid.select(fn=lambda: 'vid2vid', inputs=[], outputs=[glo_sdcn_process_mode])
     tab_txt2vid.select(fn=lambda: 'txt2vid', inputs=[], outputs=[glo_sdcn_process_mode])
