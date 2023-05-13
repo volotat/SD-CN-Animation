@@ -196,7 +196,7 @@ def on_ui_tabs():
           
         with gr.Accordion("Export settings", open=False):
           export_settings_button = gr.Button('Export', elem_id=f"sdcn_export_settings_button")
-          export_setting_json = gr.JSON(value='{}')
+          export_setting_json = gr.Code(value='')
 
 
       with gr.Column(scale=1, variant='compact'):

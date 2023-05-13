@@ -116,7 +116,7 @@ def start_process(*args):
       flow_map[:,:,0] += np.arange(args_dict['width'])
       flow_map[:,:,1] += np.arange(args_dict['height'])[:,np.newaxis]
 
-      warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_CUBIC, borderMode = cv2.BORDER_REFLECT_101)
+      warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT_101)
 
       curr_frame = warped_frame.copy()
       

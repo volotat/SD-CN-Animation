@@ -61,11 +61,12 @@ To install the extension go to 'Extensions' tab in [Automatic1111 web-ui](https:
 * The extension might work incorrectly if 'Apply color correction to img2img results to match original colors.' option is enabled. Make sure to disable it in 'Settings' tab -> 'Stable Diffusion' section. 
 
 ## Last version changes: v0.9
-* Fixed issues #69, #76, #91.
+* Fixed issues #69, #76, #91, #92.
 * Fixed an issue in vid2vid mode when an occlusion mask computed from the optical flow may include unnecessary parts (where flow is non-zero).
 * Added 'Extra params' in vid2vid mode for more fine-grain controls of the processing pipeline.
 * Better default parameters set for vid2vid pipeline.
 * In txt2vid mode after the first frame is generated the seed is now automatically set to -1 to prevent blurring issues.
 * Added an option to save resulting frames into a folder alongside the video.
 * Added ability to export current parameters in a human readable form as a json.
+* Interpolation mode in the flow-applying stage is set to ‘nearest’ to reduce overtime image blurring.
 
