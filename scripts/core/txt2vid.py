@@ -71,12 +71,23 @@ def start_process(*args):
 
     # Create an output video file with the same fps, width, and height as the input video
     output_video_name = f'outputs/sd-cn-animation/txt2vid/{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.mp4'
+    output_video_folder = os.path.splitext(output_video_name)[0]
     os.makedirs(os.path.dirname(output_video_name), exist_ok=True)
+
+    if args_dict['save_frames_check']:
+      os.makedirs(output_video_folder, exist_ok=True)
+
+    def save_result_to_image(image, ind):
+      if args_dict['save_frames_check']: 
+        cv2.imwrite(os.path.join(output_video_folder, f'{ind:05d}.png'), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+
     output_video = cv2.VideoWriter(output_video_name, cv2.VideoWriter_fourcc(*'mp4v'), args_dict['fps'], (args_dict['width'], args_dict['height']))
     output_video.write(cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR))
 
     stat = f"Frame: 1 / {args_dict['length']}; " + utils.get_time_left(1, args_dict['length'], processing_start_time)
     utils.shared.is_interrupted = False
+
+    save_result_to_image(processed_frame, 1)
     yield stat, init_frame, None, None, processed_frame, None, gr.Button.update(interactive=False), gr.Button.update(interactive=True)
 
     org_size = args_dict['width'], args_dict['height']
@@ -124,6 +135,7 @@ def start_process(*args):
       args_dict['mode'] = 4
       args_dict['init_img'] = Image.fromarray(curr_frame)
       args_dict['mask_img'] = Image.fromarray(pred_occl)
+      args_dict['seed'] = -1
 
       #utils.set_CNs_input_image(args_dict, Image.fromarray(curr_frame))
       processed_frames, _, _, _ = utils.img2img(args_dict)
@@ -134,6 +146,7 @@ def start_process(*args):
       args_dict['mode'] = 0
       args_dict['init_img'] = Image.fromarray(processed_frame)
       args_dict['mask_img'] = None
+      args_dict['seed'] = -1
       args_dict['denoising_strength'] = args_dict['fix_frame_strength']
 
       #utils.set_CNs_input_image(args_dict, Image.fromarray(curr_frame))
@@ -145,7 +158,7 @@ def start_process(*args):
       output_video.write(cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR))
       prev_frame = processed_frame.copy()
 
-      
+      save_result_to_image(processed_frame, ind + 2)
       stat = f"Frame: {ind + 2} / {args_dict['length']}; " + utils.get_time_left(ind+2, args_dict['length'], processing_start_time)
       yield stat, curr_frame, pred_occl, warped_frame, processed_frame, None, gr.Button.update(interactive=False), gr.Button.update(interactive=True)
 
