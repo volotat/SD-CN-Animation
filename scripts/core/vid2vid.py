@@ -1,16 +1,4 @@
 import sys, os
-basedirs = [os.getcwd()]
-
-for basedir in basedirs:
-    paths_to_ensure = [
-        basedir,
-        basedir + '/extensions/sd-cn-animation/scripts',
-        basedir + '/extensions/SD-CN-Animation/scripts'
-        ]
-
-    for scripts_path_fix in paths_to_ensure:
-        if not scripts_path_fix in sys.path:
-            sys.path.extend([scripts_path_fix])
 
 import math
 import os
@@ -34,8 +22,8 @@ import time
 import skimage
 import datetime
 
-from core.flow_utils import RAFT_estimate_flow, RAFT_clear_memory, compute_diff_map
-from core import utils
+from scripts.core.flow_utils import RAFT_estimate_flow, RAFT_clear_memory, compute_diff_map
+from scripts.core import utils
 
 class sdcn_anim_tmp:
   prepear_counter = 0
@@ -183,8 +171,8 @@ def start_process(*args):
         sdcn_anim_tmp.frames_prepared = False
 
         cn = sdcn_anim_tmp.process_counter % 10 
-        curr_frame = sdcn_anim_tmp.prepared_frames[cn+1]
-        prev_frame = sdcn_anim_tmp.prepared_frames[cn]
+        curr_frame = sdcn_anim_tmp.prepared_frames[cn+1][...,:3]
+        prev_frame = sdcn_anim_tmp.prepared_frames[cn][...,:3]
         next_flow = sdcn_anim_tmp.prepared_next_flows[cn]
         prev_flow = sdcn_anim_tmp.prepared_prev_flows[cn]
 
@@ -205,7 +193,7 @@ def start_process(*args):
         occlusion_mask = np.clip(alpha_mask * 255, 0, 255).astype(np.uint8)
 
         # fix warped styled frame from duplicated that occures on the places where flow is zero, but only because there is no place to get the color from
-        warped_styled_frame = curr_frame[...,:3].astype(float) * alpha_mask + warped_styled_frame[...,:3].astype(float) * (1 - alpha_mask)
+        warped_styled_frame = curr_frame.astype(float) * alpha_mask + warped_styled_frame.astype(float) * (1 - alpha_mask)
 
         # process current frame
         # TODO: convert args_dict into separate dict that stores only params necessery for img2img processing

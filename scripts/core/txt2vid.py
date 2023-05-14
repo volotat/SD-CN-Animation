@@ -1,16 +1,4 @@
 import sys, os
-basedirs = [os.getcwd()]
-
-for basedir in basedirs:
-    paths_to_ensure = [
-        basedir,
-        basedir + '/extensions/sd-cn-animation/scripts',
-        basedir + '/extensions/SD-CN-Animation/scripts'
-        ]
-
-    for scripts_path_fix in paths_to_ensure:
-        if not scripts_path_fix in sys.path:
-            sys.path.extend([scripts_path_fix])
 
 import torch
 import gc
@@ -20,7 +8,7 @@ from PIL import Image
 import modules.paths as ph
 from modules.shared import devices
 
-from core import utils, flow_utils
+from scripts.core import utils, flow_utils
 from FloweR.model import FloweR
 
 import skimage
@@ -128,7 +116,7 @@ def start_process(*args):
       flow_map[:,:,0] += np.arange(args_dict['width'])
       flow_map[:,:,1] += np.arange(args_dict['height'])[:,np.newaxis]
 
-      warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_CUBIC, borderMode = cv2.BORDER_REFLECT_101)
+      warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT_101)
 
       curr_frame = warped_frame.copy()
       

@@ -1,18 +1,4 @@
 import sys, os
-basedirs = [os.getcwd()]
-
-for basedir in basedirs:
-    paths_to_ensure = [
-        basedir,
-        basedir + '/extensions/sd-cn-animation/scripts',
-        basedir + '/extensions/SD-CN-Animation/scripts',
-        basedir + '/extensions/sd-cn-animation/RAFT',
-        basedir + '/extensions/SD-CN-Animation/RAFT'
-        ]
-
-    for scripts_path_fix in paths_to_ensure:
-        if not scripts_path_fix in sys.path:
-            sys.path.extend([scripts_path_fix])
 
 import numpy as np
 import cv2
@@ -130,8 +116,8 @@ def compute_diff_map(next_flow, prev_flow, prev_frame, cur_frame, prev_frame_sty
   prev_frame_torch = torch.from_numpy(prev_frame).float().unsqueeze(0).permute(0, 3, 1, 2) #N, C, H, W
   prev_frame_styled_torch = torch.from_numpy(prev_frame_styled).float().unsqueeze(0).permute(0, 3, 1, 2) #N, C, H, W
 
-  warped_frame = torch.nn.functional.grid_sample(prev_frame_torch, flow_grid, padding_mode="reflection").permute(0, 2, 3, 1)[0].numpy()
-  warped_frame_styled = torch.nn.functional.grid_sample(prev_frame_styled_torch, flow_grid, padding_mode="reflection").permute(0, 2, 3, 1)[0].numpy()
+  warped_frame = torch.nn.functional.grid_sample(prev_frame_torch, flow_grid, mode="nearest", padding_mode="reflection").permute(0, 2, 3, 1)[0].numpy()
+  warped_frame_styled = torch.nn.functional.grid_sample(prev_frame_styled_torch, flow_grid, mode="nearest", padding_mode="reflection").permute(0, 2, 3, 1)[0].numpy()
 
   #warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)
   #warped_frame_styled = cv2.remap(prev_frame_styled, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT)

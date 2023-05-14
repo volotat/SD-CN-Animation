@@ -1,16 +1,4 @@
 import sys, os
-basedirs = [os.getcwd()]
-
-for basedir in basedirs:
-    paths_to_ensure = [
-        basedir,
-        basedir + '/extensions/sd-cn-animation/scripts',
-        basedir + '/extensions/SD-CN-Animation/scripts'
-        ]
-
-    for scripts_path_fix in paths_to_ensure:
-        if not scripts_path_fix in sys.path:
-            sys.path.extend([scripts_path_fix])
 
 import gradio as gr
 import modules
@@ -27,7 +15,7 @@ import modules.scripts as scripts
 from modules.sd_samplers import samplers_for_img2img
 from modules.ui import setup_progressbar, create_sampler_and_steps_selection, ordered_ui_categories, create_output_panel
 
-from core import vid2vid, txt2vid, utils
+from scripts.core import vid2vid, txt2vid, utils
 import traceback
 
 def V2VArgs():
@@ -79,7 +67,7 @@ def inputs_ui():
     v2v_args = SimpleNamespace(**V2VArgs())
     t2v_args = SimpleNamespace(**T2VArgs())
     with gr.Tabs():
-        sdcn_process_mode = gr.State(value='vid2vid')
+        glo_sdcn_process_mode = gr.State(value='vid2vid')
 
         with gr.Tab('vid2vid') as tab_vid2vid:
             with gr.Row():
@@ -126,32 +114,33 @@ def inputs_ui():
             with gr.Row():
                 t2v_length = gr.Slider(label='Length (in frames)', minimum=10, maximum=2048, step=10, value=40, interactive=True)
                 t2v_fps = gr.Slider(label='Video FPS', minimum=4, maximum=64, step=4, value=12, interactive=True)
-             with FormRow(elem_id="txt2vid_override_settings_row") as row:
+            
+            with FormRow(elem_id="txt2vid_override_settings_row") as row:
                 t2v_override_settings = create_override_settings_dropdown("txt2vid", row)
 
             with FormGroup(elem_id=f"script_container"):
                 t2v_custom_inputs = scripts.scripts_txt2img.setup_ui()
     
-    tab_vid2vid.select(fn=lambda: 'vid2vid', inputs=[], outputs=[sdcn_process_mode])
-    tab_txt2vid.select(fn=lambda: 'txt2vid', inputs=[], outputs=[sdcn_process_mode])
+    tab_vid2vid.select(fn=lambda: 'vid2vid', inputs=[], outputs=[glo_sdcn_process_mode])
+    tab_txt2vid.select(fn=lambda: 'txt2vid', inputs=[], outputs=[glo_sdcn_process_mode])
          
     return locals()
 
 def process(*args):
     msg = 'Done'
     try:    
-        if args[0] == 'vid2vid':
-            yield from vid2vid.start_process(*args)
-        elif args[0] == 'txt2vid':
-            yield from txt2vid.start_process(*args)
-        else:
-            msg = f"Unsupported processing mode: '{args[0]}'"
-            raise Exception(msg)
+      if args[0] == 'vid2vid':
+        yield from vid2vid.start_process(*args)
+      elif args[0] == 'txt2vid':
+        yield from txt2vid.start_process(*args)
+      else:
+        msg = f"Unsupported processing mode: '{args[0]}'"
+        raise Exception(msg)
     except Exception as error:
-        # handle the exception
-        msg = f"An exception occurred while trying to process the frame: {error}"
-        print(msg)
-        traceback.print_exc()
+      # handle the exception
+      msg = f"An exception occurred while trying to process the frame: {error}"
+      print(msg)
+      traceback.print_exc()
     
     yield msg, gr.Image.update(), gr.Image.update(), gr.Image.update(), gr.Image.update(), gr.Video.update(), gr.Button.update(interactive=True), gr.Button.update(interactive=False)
 
@@ -159,81 +148,130 @@ def stop_process(*args):
     utils.shared.is_interrupted = True
     return gr.Button.update(interactive=False)
 
+import json
+def get_json(obj):
+  return json.loads(
+    json.dumps(obj, default=lambda o: getattr(o, '__dict__', str(o)))
+  )
+
+def export_settings(*args):
+  args_dict = utils.args_to_dict(*args)
+  if args[0] == 'vid2vid':
+    args_dict = utils.get_mode_args('v2v', args_dict)
+  elif args[0] == 'txt2vid':
+    args_dict = utils.get_mode_args('t2v', args_dict)
+  else:
+    msg = f"Unsupported processing mode: '{args[0]}'"
+    raise Exception(msg)
+  
+  # convert CN params into a readable dict
+  cn_remove_list = ['low_vram', 'is_ui', 'input_mode', 'batch_images', 'output_dir', 'loopback']
+
+  args_dict['ControlNets'] = []
+  for script_input in args_dict['script_inputs']:
+    if type(script_input).__name__ == 'UiControlNetUnit':
+      cn_values_dict = get_json(script_input)
+      if cn_values_dict['enabled']:
+        for key in cn_remove_list:
+          if key in cn_values_dict: del cn_values_dict[key]
+        args_dict['ControlNets'].append(cn_values_dict)
+  
+  # remove unimportant values
+  remove_list = ['save_frames_check', 'restore_faces', 'prompt_styles', 'mask_blur', 'inpainting_fill', 'tiling', 'n_iter', 'batch_size', 'subseed', 'subseed_strength', 'seed_resize_from_h', \
+                 'seed_resize_from_w', 'seed_enable_extras', 'resize_mode', 'inpaint_full_res', 'inpaint_full_res_padding', 'inpainting_mask_invert', 'file', 'denoising_strength', \
+                 'override_settings', 'script_inputs', 'init_img', 'mask_img', 'mode', 'init_video']
+  
+  for key in remove_list:
+    if key in args_dict: del args_dict[key]
+
+  return json.dumps(args_dict, indent=2, default=lambda o: getattr(o, '__dict__', str(o)))
+
 def on_ui_tabs():
-    modules.scripts.scripts_current = modules.scripts.scripts_img2img
-    modules.scripts.scripts_img2img.initialize_scripts(is_img2img=True)
+  modules.scripts.scripts_current = modules.scripts.scripts_img2img
+  modules.scripts.scripts_img2img.initialize_scripts(is_img2img=True)
 
-    with gr.Blocks(analytics_enabled=False) as sdcnanim_interface:
-        components = {}
-        
-        #dv = SimpleNamespace(**T2VOutputArgs())
-        with gr.Row(elem_id='sdcn-core').style(equal_height=False, variant='compact'):
-            with gr.Column(scale=1, variant='panel'):
-                with gr.Tabs():
-                    components = inputs_ui()
+  with gr.Blocks(analytics_enabled=False) as sdcnanim_interface:
+    components = {}
     
-            with gr.Column(scale=1, variant='compact'):
-                with gr.Row(variant='compact'):
-                    run_button = gr.Button('Generate', elem_id=f"sdcn_anim_generate", variant='primary')
-                    stop_button = gr.Button('Interrupt', elem_id=f"sdcn_anim_interrupt", variant='primary', interactive=False)
-                
-                save_frames_check = gr.Checkbox(label="Save frames into a folder nearby a video (check it before running the generation if you also want to save frames separately)", value=False, interactive=True)
-                gr.HTML('<br>')
+    #dv = SimpleNamespace(**T2VOutputArgs())
+    with gr.Row(elem_id='sdcn-core').style(equal_height=False, variant='compact'):
+      with gr.Column(scale=1, variant='panel'):
+        #with gr.Tabs():
+        components = inputs_ui()
+          
+        with gr.Accordion("Export settings", open=False):
+          export_settings_button = gr.Button('Export', elem_id=f"sdcn_export_settings_button")
+          export_setting_json = gr.Code(value='')
 
-                with gr.Column(variant="panel"):
-                    sp_progress = gr.HTML(elem_id="sp_progress", value="")
-                    sp_progress.update()
-                    #sp_outcome = gr.HTML(elem_id="sp_error", value="")
-                    #sp_progressbar = gr.HTML(elem_id="sp_progressbar")
-                    #setup_progressbar(sp_progressbar, sp_preview, 'sp', textinfo=sp_progress)
-                    
-                    with gr.Row(variant='compact'):
-                        img_preview_curr_frame = gr.Image(label='Current frame', elem_id=f"img_preview_curr_frame", type='pil').style(height=240)
-                        img_preview_curr_occl = gr.Image(label='Current occlusion', elem_id=f"img_preview_curr_occl", type='pil').style(height=240)
-                    with gr.Row(variant='compact'):
-                        img_preview_prev_warp = gr.Image(label='Previous frame warped', elem_id=f"img_preview_curr_frame", type='pil').style(height=240)
-                        img_preview_processed = gr.Image(label='Processed', elem_id=f"img_preview_processed", type='pil').style(height=240)
-                    
-                    # html_log = gr.HTML(elem_id=f'html_log_vid2vid')
-                    video_preview = gr.Video(interactive=False)
-                
-                with gr.Row(variant='compact'):
-                    dummy_component = gr.Label(visible=False)
 
-            components['glo_save_frames_check'] = save_frames_check
+      with gr.Column(scale=1, variant='compact'):
+        with gr.Row(variant='compact'):
+          run_button = gr.Button('Generate', elem_id=f"sdcn_anim_generate", variant='primary')
+          stop_button = gr.Button('Interrupt', elem_id=f"sdcn_anim_interrupt", variant='primary', interactive=False)
+        
+        save_frames_check = gr.Checkbox(label="Save frames into a folder nearby a video (check it before running the generation if you also want to save frames separately)", value=False, interactive=True)
+        gr.HTML('<br>')
 
-            # Define parameters for the action methods.
-            method_inputs = [components[name] for name in utils.get_component_names()] + components['v2v_custom_inputs']
+        with gr.Column(variant="panel"):
+          sp_progress = gr.HTML(elem_id="sp_progress", value="")
+          
+          with gr.Row(variant='compact'):
+            img_preview_curr_frame = gr.Image(label='Current frame', elem_id=f"img_preview_curr_frame", type='pil').style(height=240)
+            img_preview_curr_occl = gr.Image(label='Current occlusion', elem_id=f"img_preview_curr_occl", type='pil').style(height=240)
+          with gr.Row(variant='compact'):
+            img_preview_prev_warp = gr.Image(label='Previous frame warped', elem_id=f"img_preview_curr_frame", type='pil').style(height=240)
+            img_preview_processed = gr.Image(label='Processed', elem_id=f"img_preview_processed", type='pil').style(height=240)
 
-            method_outputs = [
-                sp_progress,
-                img_preview_curr_frame,
-                img_preview_curr_occl,
-                img_preview_prev_warp,
-                img_preview_processed,
-                video_preview,
-                run_button,
-                stop_button,
-            ]
+          video_preview = gr.Video(interactive=False)
+        
+        with gr.Row(variant='compact'):
+          dummy_component = gr.Label(visible=False)
 
-            run_button.click(
-                fn=process, #wrap_gradio_gpu_call(start_process, extra_outputs=[None, '', '']), 
-                inputs=method_inputs,
-                outputs=method_outputs,
-                show_progress=True,
-            )
+      components['glo_save_frames_check'] = save_frames_check
+      
+      # Define parameters for the action methods.
+      utils.shared.v2v_custom_inputs_size = len(components['v2v_custom_inputs'])
+      utils.shared.t2v_custom_inputs_size = len(components['t2v_custom_inputs'])
+      #print('v2v_custom_inputs', len(components['v2v_custom_inputs']), components['v2v_custom_inputs'])
+      #print('t2v_custom_inputs', len(components['t2v_custom_inputs']), components['t2v_custom_inputs'])
+      method_inputs = [components[name] for name in utils.get_component_names()] + components['v2v_custom_inputs'] + components['t2v_custom_inputs']
 
-            stop_button.click(
-                fn=stop_process,
-                outputs=[stop_button],
-                show_progress=False
-            )
+      method_outputs = [
+        sp_progress,
+        img_preview_curr_frame,
+        img_preview_curr_occl,
+        img_preview_prev_warp,
+        img_preview_processed,
+        video_preview,
+        run_button,
+        stop_button,
+      ]
 
-        modules.scripts.scripts_current = None
+      run_button.click(
+        fn=process, #wrap_gradio_gpu_call(start_process, extra_outputs=[None, '', '']), 
+        inputs=method_inputs,
+        outputs=method_outputs,
+        show_progress=True,
+      )
 
-        # define queue - required for generators
-        sdcnanim_interface.queue(concurrency_count=1)
-    return [(sdcnanim_interface, "SD-CN-Animation", "sd_cn_animation_interface")]
+      stop_button.click(
+        fn=stop_process,
+        outputs=[stop_button],
+        show_progress=False
+      )
+
+      export_settings_button.click(
+        fn=export_settings,
+        inputs=method_inputs,
+        outputs=[export_setting_json],
+        show_progress=False
+      )
+
+    modules.scripts.scripts_current = None
+
+    # define queue - required for generators
+    sdcnanim_interface.queue(concurrency_count=1)
+  return [(sdcnanim_interface, "SD-CN-Animation", "sd_cn_animation_interface")]
 
 
 script_callbacks.on_ui_tabs(on_ui_tabs)
