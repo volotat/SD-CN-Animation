@@ -154,7 +154,7 @@ def start_process(*args):
 
       processed_frames, _, _, _ = utils.img2img(args_dict)
       processed_frame = np.array(processed_frames[0])
-      processed_frame = skimage.exposure.match_histograms(processed_frame, init_frame, channel_axis=None)
+      processed_frame = skimage.exposure.match_histograms(processed_frame, init_frame, channel_axis=-1)
       processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
 
       args_dict['mode'] = 0
@@ -166,7 +166,7 @@ def start_process(*args):
       #utils.set_CNs_input_image(args_dict, Image.fromarray(curr_frame))
       processed_frames, _, _, _ = utils.img2img(args_dict)
       processed_frame = np.array(processed_frames[0])
-      processed_frame = skimage.exposure.match_histograms(processed_frame, init_frame, channel_axis=None)
+      processed_frame = skimage.exposure.match_histograms(processed_frame, init_frame, channel_axis=-1)
       processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
 
       output_video.write(cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR))
