@@ -1,5 +1,7 @@
 class shared:
   is_interrupted = False
+  v2v_custom_inputs_size = 0
+  t2v_custom_inputs_size = 0
 
 def get_component_names():
   components_list = [
@@ -97,13 +99,16 @@ def args_to_dict(*args): # converts list of argumets into dictionary for better 
   args = list(args)
 
   for i in range(len(args_list)):
-      if (args[i] is None) and (args_list[i] in args_dict):
-          args[i] = args_dict[args_list[i]] 
-      else:
-          args_dict[args_list[i]] = args[i]
+    if (args[i] is None) and (args_list[i] in args_dict):
+      #args[i] = args_dict[args_list[i]] 
+      pass
+    else:
+      args_dict[args_list[i]] = args[i]
 
-  args_dict['v2v_script_inputs'] = args[len(args_list):]
-  args_dict['t2v_script_inputs'] = args[len(args_list):] #do it for both
+  args_dict['v2v_script_inputs'] = args[len(args_list):len(args_list)+shared.v2v_custom_inputs_size]
+  #print('v2v_script_inputs', args_dict['v2v_script_inputs'])
+  args_dict['t2v_script_inputs'] = args[len(args_list)+shared.v2v_custom_inputs_size:]
+  #print('t2v_script_inputs', args_dict['t2v_script_inputs'])
   return args_dict
 
 def get_mode_args(mode, args_dict):

@@ -69,4 +69,4 @@ To install the extension go to 'Extensions' tab in [Automatic1111 web-ui](https:
 * Added an option to save resulting frames into a folder alongside the video.
 * Added ability to export current parameters in a human readable form as a json.
 * Interpolation mode in the flow-applying stage is set to ‘nearest’ to reduce overtime image blurring.
-
+* Added ControlNet to txt2vid mode as well as fixing #86 issue, thanks to [@mariaWitch](https://github.com/mariaWitch)

@@ -114,7 +114,8 @@ def inputs_ui():
             with gr.Row():
                 t2v_length = gr.Slider(label='Length (in frames)', minimum=10, maximum=2048, step=10, value=40, interactive=True)
                 t2v_fps = gr.Slider(label='Video FPS', minimum=4, maximum=64, step=4, value=12, interactive=True)
-             with FormRow(elem_id="txt2vid_override_settings_row") as row:
+            
+            with FormRow(elem_id="txt2vid_override_settings_row") as row:
                 t2v_override_settings = create_override_settings_dropdown("txt2vid", row)
 
             with FormGroup(elem_id=f"script_container"):
@@ -229,7 +230,11 @@ def on_ui_tabs():
       components['glo_save_frames_check'] = save_frames_check
       
       # Define parameters for the action methods.
-      method_inputs = [components[name] for name in utils.get_component_names()] + components['v2v_custom_inputs']
+      utils.shared.v2v_custom_inputs_size = len(components['v2v_custom_inputs'])
+      utils.shared.t2v_custom_inputs_size = len(components['t2v_custom_inputs'])
+      #print('v2v_custom_inputs', len(components['v2v_custom_inputs']), components['v2v_custom_inputs'])
+      #print('t2v_custom_inputs', len(components['t2v_custom_inputs']), components['t2v_custom_inputs'])
+      method_inputs = [components[name] for name in utils.get_component_names()] + components['v2v_custom_inputs'] + components['t2v_custom_inputs']
 
       method_outputs = [
         sp_progress,
