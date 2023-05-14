@@ -110,7 +110,7 @@ def start_process(*args):
   args_dict['init_img'] = Image.fromarray(curr_frame)
   utils.set_CNs_input_image(args_dict, Image.fromarray(curr_frame))
   processed_frames, _, _, _ = utils.img2img(args_dict)
-  processed_frame = np.array(processed_frames[0])
+  processed_frame = np.array(processed_frames[0])[...,:3]
   processed_frame = skimage.exposure.match_histograms(processed_frame, curr_frame, channel_axis=None)
   processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
   #print('Processed frame ', 0)
@@ -214,7 +214,7 @@ def start_process(*args):
         img2img_args_dict['seed'] = args_dict['step_1_seed']
         utils.set_CNs_input_image(img2img_args_dict, Image.fromarray(curr_frame))
         processed_frames, _, _, _ = utils.img2img(img2img_args_dict)
-        processed_frame = np.array(processed_frames[0])
+        processed_frame = np.array(processed_frames[0])[...,:3]
 
         # normalizing the colors
         processed_frame = skimage.exposure.match_histograms(processed_frame, curr_frame, channel_axis=None)
