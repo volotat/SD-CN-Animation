@@ -10,7 +10,7 @@ def get_component_names():
     'v2v_sampler_index', 'v2v_steps', 'v2v_override_settings',
     'v2v_occlusion_mask_blur', 'v2v_occlusion_mask_trailing', 'v2v_occlusion_mask_flow_multiplier', 'v2v_occlusion_mask_difo_multiplier', 'v2v_occlusion_mask_difs_multiplier',
     'v2v_step_1_processing_mode', 'v2v_step_1_blend_alpha', 'v2v_step_1_seed', 'v2v_step_2_seed',
-    't2v_width', 't2v_height', 't2v_prompt', 't2v_n_prompt', 't2v_cfg_scale', 't2v_seed', 't2v_processing_strength', 't2v_fix_frame_strength',
+    't2v_file', 't2v_width', 't2v_height', 't2v_prompt', 't2v_n_prompt', 't2v_cfg_scale', 't2v_seed', 't2v_processing_strength', 't2v_fix_frame_strength',
     't2v_sampler_index', 't2v_steps', 't2v_length', 't2v_fps',
     'glo_save_frames_check'
   ]
@@ -121,7 +121,8 @@ def get_mode_args(mode, args_dict):
 def set_CNs_input_image(args_dict, image):
   for script_input in args_dict['script_inputs']:
     if type(script_input).__name__ == 'UiControlNetUnit':
-      script_input.batch_images = [image]
+      script_input.batch_images = [np.array(image)]
+      script_input.image = np.array(image)
 
 import time
 import datetime

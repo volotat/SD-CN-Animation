@@ -71,7 +71,7 @@ def inputs_ui():
 
         with gr.Tab('vid2vid') as tab_vid2vid:
             with gr.Row():
-                gr.HTML('Put your video here:')
+                gr.HTML('Input video (each frame will be used as initial image for SD and as input image to CN): *REQUIRED')
             with gr.Row():
                 v2v_file = gr.File(label="Input video", interactive=True, file_count="single", file_types=["video"], elem_id="vid_to_vid_chosen_file")
 
@@ -110,7 +110,13 @@ def inputs_ui():
                 v2v_custom_inputs = scripts.scripts_img2img.setup_ui()
             
         with gr.Tab('txt2vid') as tab_txt2vid:
+            with gr.Row():
+                gr.HTML('Control video (each frame will be used as input image to CN): *NOT REQUIRED')
+            with gr.Row():
+                t2v_file = gr.File(label="Input video", interactive=True, file_count="single", file_types=["video"], elem_id="tex_to_vid_chosen_file")
+
             t2v_width, t2v_height, t2v_prompt, t2v_n_prompt, t2v_cfg_scale, t2v_seed, t2v_processing_strength, t2v_fix_frame_strength, t2v_sampler_index, t2v_steps = setup_common_values('txt2vid', t2v_args)
+            
             with gr.Row():
                 t2v_length = gr.Slider(label='Length (in frames)', minimum=10, maximum=2048, step=10, value=40, interactive=True)
                 t2v_fps = gr.Slider(label='Video FPS', minimum=4, maximum=64, step=4, value=12, interactive=True)

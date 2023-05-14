@@ -44,18 +44,30 @@ def FloweR_load_model(w, h):
   # Move the model to the device
   FloweR_model = FloweR_model.to(DEVICE)
 
+def read_frame_from_video(input_video):
+  if input_video is None: return None
 
+  # Reading video file
+  if input_video.isOpened():
+    ret, cur_frame = input_video.read()
+    if cur_frame is not None: 
+      cur_frame = cv2.cvtColor(cur_frame, cv2.COLOR_BGR2RGB) 
+  else:
+    cur_frame = None
+    input_video.release()
+    input_video = None
+  
+  return cur_frame
 
 def start_process(*args):
     processing_start_time = time.time()
     args_dict = utils.args_to_dict(*args)
     args_dict = utils.get_mode_args('t2v', args_dict)
 
-    #utils.set_CNs_input_image(args_dict, Image.fromarray(curr_frame))
-    processed_frames, _, _, _ = utils.txt2img(args_dict)
-    processed_frame = np.array(processed_frames[0])
-    processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
-    init_frame = processed_frame.copy()
+    # Open the input video file
+    input_video = None
+    if args_dict['file'] is not None:
+      input_video = cv2.VideoCapture(args_dict['file'].name)
 
     # Create an output video file with the same fps, width, and height as the input video
     output_video_name = f'outputs/sd-cn-animation/txt2vid/{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.mp4'
@@ -68,6 +80,16 @@ def start_process(*args):
     def save_result_to_image(image, ind):
       if args_dict['save_frames_check']: 
         cv2.imwrite(os.path.join(output_video_folder, f'{ind:05d}.png'), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+
+    if input_video is not None:
+      curr_video_frame = read_frame_from_video(input_video)
+      curr_video_frame = cv2.resize(curr_video_frame, (args_dict['width'], args_dict['height']))
+      utils.set_CNs_input_image(args_dict, Image.fromarray(curr_video_frame))
+
+    processed_frames, _, _, _ = utils.txt2img(args_dict)
+    processed_frame = np.array(processed_frames[0])
+    processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
+    init_frame = processed_frame.copy()
 
     output_video = cv2.VideoWriter(output_video_name, cv2.VideoWriter_fourcc(*'mp4v'), args_dict['fps'], (args_dict['width'], args_dict['height']))
     output_video.write(cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR))
@@ -125,7 +147,11 @@ def start_process(*args):
       args_dict['mask_img'] = Image.fromarray(pred_occl)
       args_dict['seed'] = -1
 
-      #utils.set_CNs_input_image(args_dict, Image.fromarray(curr_frame))
+      if input_video is not None:
+        curr_video_frame = read_frame_from_video(input_video)
+        curr_video_frame = cv2.resize(curr_video_frame, (args_dict['width'], args_dict['height']))
+        utils.set_CNs_input_image(args_dict, Image.fromarray(curr_video_frame))
+
       processed_frames, _, _, _ = utils.img2img(args_dict)
       processed_frame = np.array(processed_frames[0])
       processed_frame = skimage.exposure.match_histograms(processed_frame, init_frame, channel_axis=None)
@@ -150,6 +176,7 @@ def start_process(*args):
       stat = f"Frame: {ind + 2} / {args_dict['length']}; " + utils.get_time_left(ind+2, args_dict['length'], processing_start_time)
       yield stat, curr_frame, pred_occl, warped_frame, processed_frame, None, gr.Button.update(interactive=False), gr.Button.update(interactive=True)
 
+    if input_video is not None: input_video.release()
     output_video.release()
     FloweR_clear_memory()
 
