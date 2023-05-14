@@ -59,6 +59,7 @@ To install the extension go to 'Extensions' tab in [Automatic1111 web-ui](https:
 ## Known issues
 * If you see error like this ```IndexError: list index out of range``` try to restart webui, it should fix it.
 * The extension might work incorrectly if 'Apply color correction to img2img results to match original colors.' option is enabled. Make sure to disable it in 'Settings' tab -> 'Stable Diffusion' section. 
+* If you have an error like 'Need to enable queue to use generators.', please update webui to the latest version. Beware that only [Automatic1111 web-ui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) is fully supported.
 
 ## Last version changes: v0.9
 * Fixed issues #69, #76, #91, #92.
