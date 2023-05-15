@@ -4,7 +4,7 @@ This project allows you to automate video stylization task using StableDiffusion
 ![sd-cn-animation ui preview](examples/ui_preview.png)
 sd-cn-animation ui preview
 
-**In vid2vid mode do not forget to activate ControlNet model to achieve better results. Without it the resulting video might be quite choppy.**  
+**In vid2vid mode do not forget to activate ControlNet model to achieve better results. Without it the resulting video might be quite choppy. Do not put any images in CN as the frames would pass automatically from the video.**  
 Here are CN parameters that seem to give the best results so far:  
 ![sd-cn-animation cn params](examples/cn_settings.png)
 
