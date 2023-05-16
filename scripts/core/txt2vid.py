@@ -165,7 +165,7 @@ def start_process(*args):
 
       #utils.set_CNs_input_image(args_dict, Image.fromarray(curr_frame))
       processed_frames, _, _, _ = utils.img2img(args_dict)
-      processed_frame = np.array(processed_frames[0])
+      processed_frame = np.array(processed_frames[0])[...,:3]
       processed_frame = skimage.exposure.match_histograms(processed_frame, init_frame, channel_axis=-1)
       processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
 
