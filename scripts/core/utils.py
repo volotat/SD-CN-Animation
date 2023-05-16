@@ -121,8 +121,9 @@ def get_mode_args(mode, args_dict):
 def set_CNs_input_image(args_dict, image):
   for script_input in args_dict['script_inputs']:
     if type(script_input).__name__ == 'UiControlNetUnit':
-      script_input.batch_images = [np.array(image)]
-      script_input.image = np.array(image)
+      if script_input.module not in ["reference_only", "reference_adain", "reference_adain+attn"]:
+        script_input.image = np.array(image)
+        script_input.batch_images = [np.array(image)]
 
 import time
 import datetime

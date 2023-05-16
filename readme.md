@@ -60,6 +60,7 @@ To install the extension go to 'Extensions' tab in [Automatic1111 web-ui](https:
 * If you see error like this ```IndexError: list index out of range``` try to restart webui, it should fix it.
 * The extension might work incorrectly if 'Apply color correction to img2img results to match original colors.' option is enabled. Make sure to disable it in 'Settings' tab -> 'Stable Diffusion' section. 
 * If you have an error like 'Need to enable queue to use generators.', please update webui to the latest version. Beware that only [Automatic1111 web-ui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) is fully supported.
+* The extension is not compatible with Macs. If you have a case that extension is working for you or do you know how to make it compatible, please open a new discussion. 
 
 ## Last version changes: v0.9
 * Fixed issues #69, #76, #91, #92.
@@ -73,3 +74,7 @@ To install the extension go to 'Extensions' tab in [Automatic1111 web-ui](https:
 * Added ControlNet to txt2vid mode as well as fixing #86 issue, thanks to [@mariaWitch](https://github.com/mariaWitch)
 * Fixed a major issue when ConrtolNet used wrong input images. Because of this vid2vid results were way worse than they should be.
 * Text to video mode now supports video as a guidance for ControlNet. It allows to create much stronger video stylizations.
+
+<!--
+* ControlNet with preprocessers like "reference_only", "reference_adain", "reference_adain+attn" are not reseted with video frames to have an ability to control style of the video.
+-->

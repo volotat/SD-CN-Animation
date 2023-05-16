@@ -171,7 +171,7 @@ def export_settings(*args):
     raise Exception(msg)
   
   # convert CN params into a readable dict
-  cn_remove_list = ['low_vram', 'is_ui', 'input_mode', 'batch_images', 'output_dir', 'loopback']
+  cn_remove_list = ['low_vram', 'is_ui', 'input_mode', 'batch_images', 'output_dir', 'loopback', 'image']
 
   args_dict['ControlNets'] = []
   for script_input in args_dict['script_inputs']:
