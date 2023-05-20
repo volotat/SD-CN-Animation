@@ -198,7 +198,7 @@ def start_process(*args):
         # process current frame
         # TODO: convert args_dict into separate dict that stores only params necessery for img2img processing
         img2img_args_dict = args_dict #copy.deepcopy(args_dict)
-        print('PROCESSING MODE:', args_dict['step_1_processing_mode'])
+        img2img_args_dict['denoising_strength'] = args_dict['processing_strength']
         if args_dict['step_1_processing_mode'] == 0: # Process full image then blend in occlusions
           img2img_args_dict['mode'] = 0
           img2img_args_dict['mask_img'] = None #Image.fromarray(occlusion_mask)

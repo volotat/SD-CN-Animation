@@ -88,6 +88,8 @@ def start_process(*args):
 
     processed_frames, _, _, _ = utils.txt2img(args_dict)
     processed_frame = np.array(processed_frames[0])[...,:3]
+    #if input_video is not None:
+    #  processed_frame = skimage.exposure.match_histograms(processed_frame, curr_video_frame, channel_axis=-1)
     processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
     init_frame = processed_frame.copy()
 
@@ -146,6 +148,7 @@ def start_process(*args):
       args_dict['init_img'] = Image.fromarray(curr_frame)
       args_dict['mask_img'] = Image.fromarray(pred_occl)
       args_dict['seed'] = -1
+      args_dict['denoising_strength'] = args_dict['processing_strength']
 
       if input_video is not None:
         curr_video_frame = read_frame_from_video(input_video)
@@ -154,6 +157,9 @@ def start_process(*args):
 
       processed_frames, _, _, _ = utils.img2img(args_dict)
       processed_frame = np.array(processed_frames[0])[...,:3]
+      #if input_video is not None:
+      #  processed_frame = skimage.exposure.match_histograms(processed_frame, curr_video_frame, channel_axis=-1)
+      #else: 
       processed_frame = skimage.exposure.match_histograms(processed_frame, init_frame, channel_axis=-1)
       processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
 
@@ -166,6 +172,9 @@ def start_process(*args):
       #utils.set_CNs_input_image(args_dict, Image.fromarray(curr_frame))
       processed_frames, _, _, _ = utils.img2img(args_dict)
       processed_frame = np.array(processed_frames[0])[...,:3]
+      #if input_video is not None:
+      #  processed_frame = skimage.exposure.match_histograms(processed_frame, curr_video_frame, channel_axis=-1)
+      #else: 
       processed_frame = skimage.exposure.match_histograms(processed_frame, init_frame, channel_axis=-1)
       processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
 
