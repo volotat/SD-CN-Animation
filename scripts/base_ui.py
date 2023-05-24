@@ -114,6 +114,7 @@ def inputs_ui():
                 gr.HTML('Control video (each frame will be used as input image to CN): *NOT REQUIRED')
             with gr.Row():
                 t2v_file = gr.File(label="Input video", interactive=True, file_count="single", file_types=["video"], elem_id="tex_to_vid_chosen_file")
+                t2v_init_image = gr.Image(label="Input image", interactive=True, file_count="single", file_types=["image"], elem_id="tex_to_vid_init_image")
 
             t2v_width, t2v_height, t2v_prompt, t2v_n_prompt, t2v_cfg_scale, t2v_seed, t2v_processing_strength, t2v_fix_frame_strength, t2v_sampler_index, t2v_steps = setup_common_values('txt2vid', t2v_args)
             
