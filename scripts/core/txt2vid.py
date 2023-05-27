@@ -200,4 +200,6 @@ def start_process(*args):
     warped_styled_frame_ = gr.Image.update() 
     processed_frame = gr.Image.update()
 
+    # print('TOTAL TIME:', int(time.time() - processing_start_time))
+
     yield 'done', curr_frame, occlusion_mask, warped_styled_frame_, processed_frame, output_video_name, gr.Button.update(interactive=True), gr.Button.update(interactive=False)

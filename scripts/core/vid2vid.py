@@ -189,6 +189,7 @@ def start_process(*args):
             alpha_mask = alpha_mask + sdcn_anim_tmp.prev_frame_alpha_mask * 0.5
         sdcn_anim_tmp.prev_frame_alpha_mask = alpha_mask
 
+        # alpha_mask = np.round(alpha_mask * 8) / 8 #> 0.3
         alpha_mask = np.clip(alpha_mask, 0, 1)
         occlusion_mask = np.clip(alpha_mask * 255, 0, 255).astype(np.uint8)
 
