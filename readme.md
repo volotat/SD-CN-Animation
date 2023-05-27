@@ -82,4 +82,5 @@ pip install sckit-image==0.19.2 --no-cache-dir
 <!--
 * ControlNet with preprocessers like "reference_only", "reference_adain", "reference_adain+attn" are not reseted with video frames to have an ability to control style of the video.
 * Fixed an issue because of witch 'processing_strength' UI parameters does not actually affected denoising strength at the fist processing step.
+* Fixed issue #112. It will not try to reinstall requirements at every start of webui.
 -->
