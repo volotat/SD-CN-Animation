@@ -86,12 +86,18 @@ def start_process(*args):
       curr_video_frame = cv2.resize(curr_video_frame, (args_dict['width'], args_dict['height']))
       utils.set_CNs_input_image(args_dict, Image.fromarray(curr_video_frame))
 
-    processed_frames, _, _, _ = utils.txt2img(args_dict)
-    processed_frame = np.array(processed_frames[0])[...,:3]
-    #if input_video is not None:
-    #  processed_frame = skimage.exposure.match_histograms(processed_frame, curr_video_frame, channel_axis=-1)
-    processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
-    init_frame = processed_frame.copy()
+    if args_dict['init_image'] is not None:
+      #resize array to args_dict['width'], args_dict['height']
+      image_array=args_dict['init_image']#this is a numpy array
+      init_frame = np.array(Image.fromarray(image_array).resize((args_dict['width'], args_dict['height'])).convert('RGB'))
+      processed_frame = init_frame.copy()
+    else:
+      processed_frames, _, _, _ = utils.txt2img(args_dict)
+      processed_frame = np.array(processed_frames[0])[...,:3]
+      #if input_video is not None:
+      #  processed_frame = skimage.exposure.match_histograms(processed_frame, curr_video_frame, channel_axis=-1)
+      processed_frame = np.clip(processed_frame, 0, 255).astype(np.uint8)
+      init_frame = processed_frame.copy()
 
     output_video = cv2.VideoWriter(output_video_name, cv2.VideoWriter_fourcc(*'mp4v'), args_dict['fps'], (args_dict['width'], args_dict['height']))
     output_video.write(cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR))
