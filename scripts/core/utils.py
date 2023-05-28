@@ -329,6 +329,7 @@ def img2img(args_dict):
     #if opts.do_not_show_images:
     #    processed.images = []
 
+    #print(generation_info_js, plaintext_to_html(processed.info), plaintext_to_html(processed.comments))
     return generated_images, generation_info_js, plaintext_to_html(processed.info), plaintext_to_html(processed.comments)
 
 def txt2img(args_dict):  
