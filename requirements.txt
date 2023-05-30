@@ -1,1 +1,1 @@
-scikit-image>=0.19.2
+scikit-image

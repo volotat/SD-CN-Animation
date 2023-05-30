@@ -37,8 +37,8 @@ def T2VArgs():
     cfg_scale = 5.5
     steps = 15
     prompt = ""
-    n_prompt = "text, letters, logo, brand, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
-    processing_strength = 0.85
+    n_prompt = "((blur, blurr, blurred, blurry, fuzzy, unclear, unfocus, bocca effect)), text, letters, logo, brand, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
+    processing_strength = 0.75
     fix_frame_strength = 0.35
     return locals()
 
@@ -121,6 +121,10 @@ def inputs_ui():
             with gr.Row():
                 t2v_length = gr.Slider(label='Length (in frames)', minimum=10, maximum=2048, step=10, value=40, interactive=True)
                 t2v_fps = gr.Slider(label='Video FPS', minimum=4, maximum=64, step=4, value=12, interactive=True)
+
+            gr.HTML('<br>')
+            t2v_cn_frame_send = gr.Radio(["None", "Current generated frame", "Previous generated frame", "Current reference video frame"], type="index", \
+                label="What frame should be send to CN?", value="None", interactive=True)
             
             with FormRow(elem_id="txt2vid_override_settings_row") as row:
                 t2v_override_settings = create_override_settings_dropdown("txt2vid", row)
@@ -155,43 +159,7 @@ def stop_process(*args):
     utils.shared.is_interrupted = True
     return gr.Button.update(interactive=False)
 
-import json
-def get_json(obj):
-  return json.loads(
-    json.dumps(obj, default=lambda o: getattr(o, '__dict__', str(o)))
-  )
 
-def export_settings(*args):
-  args_dict = utils.args_to_dict(*args)
-  if args[0] == 'vid2vid':
-    args_dict = utils.get_mode_args('v2v', args_dict)
-  elif args[0] == 'txt2vid':
-    args_dict = utils.get_mode_args('t2v', args_dict)
-  else:
-    msg = f"Unsupported processing mode: '{args[0]}'"
-    raise Exception(msg)
-  
-  # convert CN params into a readable dict
-  cn_remove_list = ['low_vram', 'is_ui', 'input_mode', 'batch_images', 'output_dir', 'loopback', 'image']
-
-  args_dict['ControlNets'] = []
-  for script_input in args_dict['script_inputs']:
-    if type(script_input).__name__ == 'UiControlNetUnit':
-      cn_values_dict = get_json(script_input)
-      if cn_values_dict['enabled']:
-        for key in cn_remove_list:
-          if key in cn_values_dict: del cn_values_dict[key]
-        args_dict['ControlNets'].append(cn_values_dict)
-  
-  # remove unimportant values
-  remove_list = ['save_frames_check', 'restore_faces', 'prompt_styles', 'mask_blur', 'inpainting_fill', 'tiling', 'n_iter', 'batch_size', 'subseed', 'subseed_strength', 'seed_resize_from_h', \
-                 'seed_resize_from_w', 'seed_enable_extras', 'resize_mode', 'inpaint_full_res', 'inpaint_full_res_padding', 'inpainting_mask_invert', 'file', 'denoising_strength', \
-                 'override_settings', 'script_inputs', 'init_img', 'mask_img', 'mode', 'init_video']
-  
-  for key in remove_list:
-    if key in args_dict: del args_dict[key]
-
-  return json.dumps(args_dict, indent=2, default=lambda o: getattr(o, '__dict__', str(o)))
 
 def on_ui_tabs():
   modules.scripts.scripts_current = modules.scripts.scripts_img2img
@@ -216,7 +184,7 @@ def on_ui_tabs():
           run_button = gr.Button('Generate', elem_id=f"sdcn_anim_generate", variant='primary')
           stop_button = gr.Button('Interrupt', elem_id=f"sdcn_anim_interrupt", variant='primary', interactive=False)
         
-        save_frames_check = gr.Checkbox(label="Save frames into a folder nearby a video (check it before running the generation if you also want to save frames separately)", value=False, interactive=True)
+        save_frames_check = gr.Checkbox(label="Save frames into a folder nearby a video (check it before running the generation if you also want to save frames separately)", value=True, interactive=True)
         gr.HTML('<br>')
 
         with gr.Column(variant="panel"):
@@ -268,7 +236,7 @@ def on_ui_tabs():
       )
 
       export_settings_button.click(
-        fn=export_settings,
+        fn=utils.export_settings,
         inputs=method_inputs,
         outputs=[export_setting_json],
         show_progress=False

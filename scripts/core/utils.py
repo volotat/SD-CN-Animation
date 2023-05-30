@@ -11,7 +11,7 @@ def get_component_names():
     'v2v_occlusion_mask_blur', 'v2v_occlusion_mask_trailing', 'v2v_occlusion_mask_flow_multiplier', 'v2v_occlusion_mask_difo_multiplier', 'v2v_occlusion_mask_difs_multiplier',
     'v2v_step_1_processing_mode', 'v2v_step_1_blend_alpha', 'v2v_step_1_seed', 'v2v_step_2_seed',
     't2v_file','t2v_init_image', 't2v_width', 't2v_height', 't2v_prompt', 't2v_n_prompt', 't2v_cfg_scale', 't2v_seed', 't2v_processing_strength', 't2v_fix_frame_strength',
-    't2v_sampler_index', 't2v_steps', 't2v_length', 't2v_fps',
+    't2v_sampler_index', 't2v_steps', 't2v_length', 't2v_fps', 't2v_cn_frame_send',
     'glo_save_frames_check'
   ]
 
@@ -120,10 +120,10 @@ def get_mode_args(mode, args_dict):
 
   return mode_args_dict
 
-def set_CNs_input_image(args_dict, image):
+def set_CNs_input_image(args_dict, image, set_references = False):
   for script_input in args_dict['script_inputs']:
     if type(script_input).__name__ == 'UiControlNetUnit':
-      if script_input.module not in ["reference_only", "reference_adain", "reference_adain+attn"]:
+      if script_input.module not in ["reference_only", "reference_adain", "reference_adain+attn"] or set_references:
         script_input.image = np.array(image)
         script_input.batch_images = [np.array(image)]
 
@@ -391,3 +391,42 @@ def txt2img(args_dict):
     #    processed.images = []
 
     return processed.images, generation_info_js, plaintext_to_html(processed.info), plaintext_to_html(processed.comments)
+
+
+import json
+def get_json(obj):
+  return json.loads(
+    json.dumps(obj, default=lambda o: getattr(o, '__dict__', str(o)))
+  )
+
+def export_settings(*args):
+  args_dict = args_to_dict(*args)
+  if args[0] == 'vid2vid':
+    args_dict = get_mode_args('v2v', args_dict)
+  elif args[0] == 'txt2vid':
+    args_dict = get_mode_args('t2v', args_dict)
+  else:
+    msg = f"Unsupported processing mode: '{args[0]}'"
+    raise Exception(msg)
+  
+  # convert CN params into a readable dict
+  cn_remove_list = ['low_vram', 'is_ui', 'input_mode', 'batch_images', 'output_dir', 'loopback', 'image']
+
+  args_dict['ControlNets'] = []
+  for script_input in args_dict['script_inputs']:
+    if type(script_input).__name__ == 'UiControlNetUnit':
+      cn_values_dict = get_json(script_input)
+      if cn_values_dict['enabled']:
+        for key in cn_remove_list:
+          if key in cn_values_dict: del cn_values_dict[key]
+        args_dict['ControlNets'].append(cn_values_dict)
+  
+  # remove unimportant values
+  remove_list = ['save_frames_check', 'restore_faces', 'prompt_styles', 'mask_blur', 'inpainting_fill', 'tiling', 'n_iter', 'batch_size', 'subseed', 'subseed_strength', 'seed_resize_from_h', \
+                 'seed_resize_from_w', 'seed_enable_extras', 'resize_mode', 'inpaint_full_res', 'inpaint_full_res_padding', 'inpainting_mask_invert', 'file', 'denoising_strength', \
+                 'override_settings', 'script_inputs', 'init_img', 'mask_img', 'mode', 'init_video']
+  
+  for key in remove_list:
+    if key in args_dict: del args_dict[key]
+
+  return json.dumps(args_dict, indent=2, default=lambda o: getattr(o, '__dict__', str(o)))

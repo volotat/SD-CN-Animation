@@ -30,8 +30,9 @@ def FloweR_load_model(w, h):
   global DEVICE, FloweR_model
   DEVICE = devices.get_optimal_device()
 
-  model_path = ph.models_path + '/FloweR/FloweR_0.1.1.pth'
-  remote_model_path = 'https://drive.google.com/uc?id=1K7gXUosgxU729_l-osl1HBU5xqyLsALv'
+  model_path = ph.models_path + '/FloweR/FloweR_0.1.2.pth'
+  #remote_model_path = 'https://drive.google.com/uc?id=1K7gXUosgxU729_l-osl1HBU5xqyLsALv' #FloweR_0.1.1.pth
+  remote_model_path = 'https://drive.google.com/uc?id=1-UYsTXkdUkHLgtPK1Y5_7kKzCgzL_Z6o' #FloweR_0.1.2.pth
 
   if not os.path.isfile(model_path):
     from basicsr.utils.download_util import load_file_from_url
@@ -43,6 +44,7 @@ def FloweR_load_model(w, h):
   FloweR_model.load_state_dict(torch.load(model_path, map_location=DEVICE))
   # Move the model to the device
   FloweR_model = FloweR_model.to(DEVICE)
+  FloweR_model.eval()
 
 def read_frame_from_video(input_video):
   if input_video is None: return None
@@ -74,17 +76,41 @@ def start_process(*args):
     output_video_folder = os.path.splitext(output_video_name)[0]
     os.makedirs(os.path.dirname(output_video_name), exist_ok=True)
 
-    if args_dict['save_frames_check']:
-      os.makedirs(output_video_folder, exist_ok=True)
+    #if args_dict['save_frames_check']: 
+    os.makedirs(output_video_folder, exist_ok=True)
 
+    # Writing to current params to params.json
+    setts_json = utils.export_settings(*args)
+    with open(os.path.join(output_video_folder, "params.json"), "w") as outfile:
+      outfile.write(setts_json)
+
+    curr_frame = None
+    prev_frame = None
+    
     def save_result_to_image(image, ind):
       if args_dict['save_frames_check']: 
         cv2.imwrite(os.path.join(output_video_folder, f'{ind:05d}.png'), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
 
-    if input_video is not None:
-      curr_video_frame = read_frame_from_video(input_video)
-      curr_video_frame = cv2.resize(curr_video_frame, (args_dict['width'], args_dict['height']))
-      utils.set_CNs_input_image(args_dict, Image.fromarray(curr_video_frame))
+    def set_cn_frame_input():
+      if args_dict['cn_frame_send'] == 0: # Current generated frame"
+        pass
+      elif args_dict['cn_frame_send'] == 1: # Current generated frame"
+        if curr_frame is not None:
+          utils.set_CNs_input_image(args_dict, Image.fromarray(curr_frame), set_references=True)
+      elif args_dict['cn_frame_send'] == 2: # Previous generated frame
+        if prev_frame is not None:
+          utils.set_CNs_input_image(args_dict, Image.fromarray(prev_frame), set_references=True)
+      elif args_dict['cn_frame_send'] == 3: # Current reference video frame
+        if input_video is not None:
+          curr_video_frame = read_frame_from_video(input_video)
+          curr_video_frame = cv2.resize(curr_video_frame, (args_dict['width'], args_dict['height']))
+          utils.set_CNs_input_image(args_dict, Image.fromarray(curr_video_frame), set_references=True)
+        else:
+          raise Exception('There is no input video! Set it up first.')
+      else:
+        raise Exception('Incorrect cn_frame_send mode!')
+
+    set_cn_frame_input()
 
     if args_dict['init_image'] is not None:
       #resize array to args_dict['width'], args_dict['height']
@@ -131,10 +157,18 @@ def start_process(*args):
 
       pred_flow = flow_utils.flow_renorm(pred_data[...,:2]).cpu().numpy()
       pred_occl = flow_utils.occl_renorm(pred_data[...,2:3]).cpu().numpy().repeat(3, axis = -1)
-
+      pred_next = flow_utils.frames_renorm(pred_data[...,3:6]).cpu().numpy()
+      
+      pred_occl = np.clip(pred_occl * 10, 0, 255).astype(np.uint8)
+      pred_next = np.clip(pred_next, 0, 255).astype(np.uint8)
+      
       pred_flow = cv2.resize(pred_flow, org_size)
       pred_occl = cv2.resize(pred_occl, org_size)
+      pred_next = cv2.resize(pred_next, org_size)
 
+      curr_frame = pred_next.copy()
+
+      '''
       pred_flow = pred_flow / (1 + np.linalg.norm(pred_flow, axis=-1, keepdims=True) * 0.05) 
       pred_flow = cv2.GaussianBlur(pred_flow, (31,31), 1, cv2.BORDER_REFLECT_101)
     
@@ -147,19 +181,20 @@ def start_process(*args):
       flow_map[:,:,1] += np.arange(args_dict['height'])[:,np.newaxis]
 
       warped_frame = cv2.remap(prev_frame, flow_map, None, cv2.INTER_NEAREST, borderMode = cv2.BORDER_REFLECT_101)
+      alpha_mask = pred_occl / 255.
+      #alpha_mask = np.clip(alpha_mask + np.random.normal(0, 0.4, size = alpha_mask.shape), 0, 1)
+      curr_frame = pred_next.astype(float) * alpha_mask + warped_frame.astype(float) * (1 - alpha_mask)
+      curr_frame = np.clip(curr_frame, 0, 255).astype(np.uint8)
+      #curr_frame = warped_frame.copy()
+      '''
 
-      curr_frame = warped_frame.copy()
-      
+      set_cn_frame_input()
+
       args_dict['mode'] = 4
-      args_dict['init_img'] = Image.fromarray(curr_frame)
+      args_dict['init_img'] = Image.fromarray(pred_next)
       args_dict['mask_img'] = Image.fromarray(pred_occl)
       args_dict['seed'] = -1
       args_dict['denoising_strength'] = args_dict['processing_strength']
-
-      if input_video is not None:
-        curr_video_frame = read_frame_from_video(input_video)
-        curr_video_frame = cv2.resize(curr_video_frame, (args_dict['width'], args_dict['height']))
-        utils.set_CNs_input_image(args_dict, Image.fromarray(curr_video_frame))
 
       processed_frames, _, _, _ = utils.img2img(args_dict)
       processed_frame = np.array(processed_frames[0])[...,:3]
@@ -189,7 +224,7 @@ def start_process(*args):
 
       save_result_to_image(processed_frame, ind + 2)
       stat = f"Frame: {ind + 2} / {args_dict['length']}; " + utils.get_time_left(ind+2, args_dict['length'], processing_start_time)
-      yield stat, curr_frame, pred_occl, warped_frame, processed_frame, None, gr.Button.update(interactive=False), gr.Button.update(interactive=True)
+      yield stat, curr_frame, pred_occl, pred_next, processed_frame, None, gr.Button.update(interactive=False), gr.Button.update(interactive=True)
 
     if input_video is not None: input_video.release()
     output_video.release()
