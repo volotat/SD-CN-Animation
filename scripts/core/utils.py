@@ -147,7 +147,7 @@ import modules.processing as processing
 from modules.ui import plaintext_to_html
 import modules.images as images
 import modules.scripts
-from modules.shared import opts, devices, state
+from modules.shared import opts, state
 from modules import devices, sd_samplers, img2img
 from modules import shared, sd_hijack, lowvram
 
