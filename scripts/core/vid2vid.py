@@ -11,7 +11,6 @@ from PIL import Image
 from modules import devices, sd_samplers
 from modules import shared, sd_hijack, lowvram
 
-from modules.shared import devices
 import modules.shared as shared
 
 import gc
