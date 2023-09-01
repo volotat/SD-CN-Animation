@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 from modules import script_callbacks, shared
 from modules.shared import cmd_opts, opts
-from webui import wrap_gradio_gpu_call
+from modules.call_queue import wrap_gradio_gpu_call
 
 from modules.ui_components import ToolButton, FormRow, FormGroup
 from modules.ui import create_override_settings_dropdown

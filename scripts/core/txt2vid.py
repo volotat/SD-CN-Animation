@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 
 import modules.paths as ph
-from modules.shared import devices
+from modules import devices
 
 from scripts.core import utils, flow_utils
 from FloweR.model import FloweR
