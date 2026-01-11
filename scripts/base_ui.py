@@ -13,7 +13,6 @@ from modules.ui import create_override_settings_dropdown
 import modules.scripts as scripts
 
 from modules.sd_samplers import samplers_for_img2img
-from modules.ui import setup_progressbar, create_sampler_and_steps_selection, ordered_ui_categories, create_output_panel
 
 from scripts.core import vid2vid, txt2vid, utils
 import traceback
@@ -169,7 +168,7 @@ def on_ui_tabs():
     components = {}
     
     #dv = SimpleNamespace(**T2VOutputArgs())
-    with gr.Row(elem_id='sdcn-core').style(equal_height=False, variant='compact'):
+    with gr.Row(elem_id='sdcn-core', equal_height=False, variant='compact'):
       with gr.Column(scale=1, variant='panel'):
         #with gr.Tabs():
         components = inputs_ui()
@@ -191,11 +190,11 @@ def on_ui_tabs():
           sp_progress = gr.HTML(elem_id="sp_progress", value="")
           
           with gr.Row(variant='compact'):
-            img_preview_curr_frame = gr.Image(label='Current frame', elem_id=f"img_preview_curr_frame", type='pil').style(height=240)
-            img_preview_curr_occl = gr.Image(label='Current occlusion', elem_id=f"img_preview_curr_occl", type='pil').style(height=240)
+            img_preview_curr_frame = gr.Image(label='Current frame', elem_id=f"img_preview_curr_frame", type='pil', height=240)
+            img_preview_curr_occl = gr.Image(label='Current occlusion', elem_id=f"img_preview_curr_occl", type='pil', height=240)
           with gr.Row(variant='compact'):
-            img_preview_prev_warp = gr.Image(label='Previous frame warped', elem_id=f"img_preview_curr_frame", type='pil').style(height=240)
-            img_preview_processed = gr.Image(label='Processed', elem_id=f"img_preview_processed", type='pil').style(height=240)
+            img_preview_prev_warp = gr.Image(label='Previous frame warped', elem_id=f"img_preview_curr_frame", type='pil', height=240)
+            img_preview_processed = gr.Image(label='Processed', elem_id=f"img_preview_processed", type='pil', height=240)
 
           video_preview = gr.Video(interactive=False)
         
@@ -245,7 +244,8 @@ def on_ui_tabs():
     modules.scripts.scripts_current = None
 
     # define queue - required for generators
-    sdcnanim_interface.queue(concurrency_count=1)
+    sdcnanim_interface.queue()
+
   return [(sdcnanim_interface, "SD-CN-Animation", "sd_cn_animation_interface")]
 
 

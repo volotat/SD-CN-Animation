@@ -9,7 +9,12 @@ import numpy as np
 from PIL import Image
 
 from modules import devices, sd_samplers
-from modules import shared, sd_hijack, lowvram
+from modules import shared, sd_hijack
+
+try:
+    from modules import lowvram
+except ImportError:
+    lowvram = None
 
 import modules.shared as shared
 
@@ -60,10 +65,11 @@ def get_cur_stat():
 def clear_memory_from_sd():
   if shared.sd_model is not None:
     sd_hijack.model_hijack.undo_hijack(shared.sd_model)
-    try:
-      lowvram.send_everything_to_cpu()
-    except Exception as e:
-      ...
+    if lowvram:
+      try:
+        lowvram.send_everything_to_cpu()
+      except Exception as e:
+        ...
     del shared.sd_model
     shared.sd_model = None
   gc.collect()
