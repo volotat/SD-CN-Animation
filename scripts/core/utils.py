@@ -149,7 +149,7 @@ import modules.images as images
 import modules.scripts
 from modules.shared import opts, state
 from modules import devices, sd_samplers, img2img
-from modules import shared, sd_hijack, lowvram
+from modules import shared, sd_hijack
 
 # TODO: Refactor all the code below
 
