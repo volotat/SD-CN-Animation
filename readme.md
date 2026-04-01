@@ -1,6 +1,6 @@
 # SD-CN-Animation
 > [!Warning]
-> This repository is no longer maintained. If you are looking for more modern ComfyUI version of this tool please check out this repository, this might be what you are actually loocking for: https://github.com/pxl-pshr/ComfyUI-SD-CN-Animation
+> This repository is no longer maintained. If you are looking for more modern ComfyUI version of this tool please check out this repository, this might be what you are actually looking for: https://github.com/pxl-pshr/ComfyUI-SD-CN-Animation
 
 This project allows you to automate video stylization task using StableDiffusion and ControlNet. It also allows you to generate completely new videos from text at any resolution and length in contrast to other current text2video methods using any Stable Diffusion model as a backbone, including custom ones. It uses '[RAFT](https://github.com/princeton-vl/RAFT)' optical flow estimation algorithm to keep the animation stable and create an occlusion mask that is used to generate the next frame. In text to video mode it relies on 'FloweR' method (work in progress) that predicts optical flow from the previous frames.
 
